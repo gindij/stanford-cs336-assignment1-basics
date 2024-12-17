@@ -604,8 +604,7 @@ class BPETokenizer:
         :yield: One token id at a time.
         """
         for s in iterable:
-            ids = self.encode(s)
-            yield from ids
+            yield from self.encode(s)
 
     def decode(self, ids: List[int]) -> str:
         """
