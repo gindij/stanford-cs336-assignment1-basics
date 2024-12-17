@@ -1,12 +1,11 @@
 import base64 as b64
 import collections
 import json
-import regex as re
 import sys
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
+import regex as re
 import tqdm
-
 
 GPT2_PRETOK_REGEX = (
     r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
