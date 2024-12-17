@@ -7,7 +7,7 @@ from typing import IO, BinaryIO, Iterable, Optional, Type
 import numpy.typing as npt
 import torch
 
-from cs336_basics.train_bpe import BPETokenizer
+from cs336_basics.bpe import BPETokenizer
 
 
 def run_positionwise_feedforward(
