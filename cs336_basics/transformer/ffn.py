@@ -22,8 +22,8 @@ class FeedForwardNetwork(torch.nn.Module):
 
         print(d_model, d_ff)
 
-        w1_weights = weights.get("w1.weight", torch.randn(self.d_model, self.d_ff))
-        w2_weights = weights.get("w2.weight", torch.randn(self.d_ff, self.d_model))
+        w1_weights = weights.get("w1.weight", torch.randn(self.d_ff, self.d_model)).T
+        w2_weights = weights.get("w2.weight", torch.randn(self.d_model, self.d_ff)).T
 
         self.w1 = torch.nn.Parameter(w1_weights)
         self.w2 = torch.nn.Parameter(w2_weights)
@@ -34,4 +34,4 @@ class FeedForwardNetwork(torch.nn.Module):
         return cls(d_model, d_ff, weights)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return gelu(x @ self.w1.T) @ self.w2.T  #
+        return gelu(x @ self.w1) @ self.w2
