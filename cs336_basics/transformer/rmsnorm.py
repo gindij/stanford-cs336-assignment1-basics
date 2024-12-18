@@ -23,4 +23,4 @@ class RMSNorm(torch.nn.Module):
 
     def forward(self, a: torch.Tensor) -> torch.Tensor:
         rms = torch.sqrt(torch.mean(a**2, dim=-1, keepdim=True) + self.ep)
-        return a * self.g.view(1, 1, -1) / rms  # type: ignore
+        return a * self.g.view(1, 1, -1) / rms  #

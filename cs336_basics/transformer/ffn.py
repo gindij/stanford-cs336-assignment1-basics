@@ -34,4 +34,4 @@ class FeedForwardNetwork(torch.nn.Module):
         return cls(d_model, d_ff, weights)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return gelu(x @ self.w1.T) @ self.w2.T  # type: ignore
+        return gelu(x @ self.w1.T) @ self.w2.T  #

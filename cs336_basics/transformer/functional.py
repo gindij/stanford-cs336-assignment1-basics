@@ -5,14 +5,14 @@ import torch
 
 
 def gelu(x: torch.Tensor) -> torch.Tensor:
-    return 0.5 * x * (1.0 + torch.erf(x / np.sqrt(2)))  # type: ignore
+    return 0.5 * x * (1.0 + torch.erf(x / np.sqrt(2)))  #
 
 
 def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:
     xmax = torch.max(x, dim, keepdim=True).values
     xadj = x - xmax
     xexp = torch.exp(xadj)
-    return xexp / torch.sum(xexp, dim=dim, keepdim=True)  # type: ignore
+    return xexp / torch.sum(xexp, dim=dim, keepdim=True)  #
 
 
 def attention(
