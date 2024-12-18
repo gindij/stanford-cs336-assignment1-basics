@@ -9,7 +9,7 @@ class RMSNorm(torch.nn.Module):
         self,
         d_model: int,
         epsilon: float,
-        state: Optional[Dict[str, torch.FloatTensor]] = None,
+        state: Optional[Dict[str, torch.Tensor]] = None,
     ):
         super().__init__()
         self.ep = epsilon
@@ -21,6 +21,6 @@ class RMSNorm(torch.nn.Module):
             weights = state["weight"]
         self.g = torch.nn.Parameter(weights)
 
-    def forward(self, a: torch.FloatTensor) -> torch.FloatTensor:
+    def forward(self, a: torch.Tensor) -> torch.Tensor:
         rms = torch.sqrt(torch.mean(a**2, dim=-1, keepdim=True) + self.ep)
         return a * self.g.view(1, 1, -1) / rms  # type: ignore

@@ -16,9 +16,9 @@ from cs336_basics.transformer.ffn import FeedForwardNetwork
 def run_positionwise_feedforward(
     d_model: int,
     d_ff: int,
-    weights: dict[str, torch.FloatTensor],
-    in_features: torch.FloatTensor,
-) -> torch.FloatTensor:
+    weights: dict[str, torch.Tensor],
+    in_features: torch.Tensor,
+) -> torch.Tensor:
     """Given the weights of a position-wise feedforward network, return
     the output of your implementation with these weights.
 
@@ -27,7 +27,7 @@ def run_positionwise_feedforward(
             Dimensionality of the feedforward input and output.
         d_ff: int
             Dimensionality of the feedforward network's inner layer.
-        weights: dict[str, torch.FloatTensor]
+        weights: dict[str, torch.Tensor]
             State dict of our reference implementation.
             The keys of this dictionary are `w1.weight` and `w2.weight`.
             `w1` is the first linear transformation, and `w2` is the second
@@ -35,11 +35,11 @@ def run_positionwise_feedforward(
             `w1.weight` is of shape (d_ff, d_model).
             `w2.weight` is of shape (d_model, d_ff).
     )
-        in_features: torch.FloatTensor
+        in_features: torch.Tensor
             Tensor to run your implementation on.
 
     Returns:
-        torch.FloatTensor with the output of running your position-wise feedforward network
+        torch.Tensor with the output of running your position-wise feedforward network
         with the provided `weights` on the provided `in_features`.
     """
     # Example:
@@ -54,27 +54,27 @@ def run_positionwise_feedforward(
 
 
 def run_scaled_dot_product_attention(
-    K: torch.FloatTensor,
-    Q: torch.FloatTensor,
-    V: torch.FloatTensor,
+    K: torch.Tensor,
+    Q: torch.Tensor,
+    V: torch.Tensor,
     mask: Optional[torch.BoolTensor] = None,
     pdrop: Optional[float] = None,
-) -> torch.FloatTensor:
+) -> torch.Tensor:
     """Given key (K), query (Q), and value (V) tensors, return
     the output of your scaled dot product attention implementation.
 
     Args:
-        K: torch.FloatTensor
+        K: torch.Tensor
             Tensor with attention keys. Shape is
             (batch_size, ..., seq_len, key_dimension), where
             "..." is optional and represents any number of other
             batch dimensions (e.g., num_heads).
-        Q: torch.FloatTensor
+        Q: torch.Tensor
             Tensor with attention queries. Shape is
             (batch_size, ..., seq_len, key_dimension), where
             "..." is optional and represents any number of other
             batch dimensions (e.g., num_heads).
-        V: torch.FloatTensor
+        V: torch.Tensor
             Tensor with attention values. Shape is
             (batch_size, ..., seq_len, value_dimension), where
             "..." is optional and represents any number of other
@@ -88,7 +88,7 @@ def run_scaled_dot_product_attention(
             attention scores) with this rate.
 
     Returns:
-        torch.FloatTensor of shape (batch_size, ..., seq_len, value_dimension)
+        torch.Tensor of shape (batch_size, ..., seq_len, value_dimension)
         with the output of running your scaled dot product attention
         implementation with the provided key, query, and value tensors.
     """
@@ -99,9 +99,9 @@ def run_multihead_self_attention(
     d_model: int,
     num_heads: int,
     attn_pdrop: float,
-    weights: dict[str, torch.FloatTensor],
-    in_features: torch.FloatTensor,
-) -> torch.FloatTensor:
+    weights: dict[str, torch.Tensor],
+    in_features: torch.Tensor,
+) -> torch.Tensor:
     """Given the key, query, and value projection weights of a naive unbatched
     implementation of multi-head attention, return the output of an optimized batched
     implementation. This implementation should handle the key, query, and value projections
@@ -116,7 +116,7 @@ def run_multihead_self_attention(
         attn_pdrop: float
             Drop-out the attention probabilities (the softmax-normalized
             attention scores) with this rate.
-        weights: dict[str, torch.FloatTensor]
+        weights: dict[str, torch.Tensor]
             State dict of our reference implementation.
             The keys of this dictionary are:
             - `q_heads.{N}.weight`, `q_heads.{N}.weight`:
@@ -135,11 +135,11 @@ def run_multihead_self_attention(
                 Weight of the output projection
                 (W^{O} in the original Transformer paper)
                 Shape of (d_model, d_value * num_heads).
-        in_features: torch.FloatTensor
+        in_features: torch.Tensor
             Tensor to run your implementation on.
 
     Returns:
-        torch.FloatTensor with the output of running your optimized, batched multi-headed attention
+        torch.Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
     raise NotImplementedError
@@ -151,9 +151,9 @@ def run_transformer_block(
     d_ff: int,
     attn_pdrop: float,
     residual_pdrop: float,
-    weights: dict[str, torch.FloatTensor],
-    in_features: torch.FloatTensor,
-) -> torch.FloatTensor:
+    weights: dict[str, torch.Tensor],
+    in_features: torch.Tensor,
+) -> torch.Tensor:
     """Given the weights of a pre-norm Transformer block and input features,
     return the output of running the Transformer block on the input features.
 
@@ -171,7 +171,7 @@ def run_transformer_block(
         residual_pdrop: float
             Apply dropout to the output of each sub-layer, before it
             is added to the sub-layer input and normalized (section 5.4).
-        weights: dict[str, torch.FloatTensor]
+        weights: dict[str, torch.Tensor]
             State dict of our reference implementation.
             The keys of this dictionary are:
             - `attn.q_proj.weight`
@@ -206,7 +206,7 @@ def run_transformer_block(
                 Weights of affine transform for the second RMSNorm
                 applied in the transformer block.
                 Shape is (d_model,).
-        in_features: torch.FloatTensor
+        in_features: torch.Tensor
             Tensor to run your implementation on.
             Shape is (batch_size, sequence_length, d_model).
 
@@ -226,9 +226,9 @@ def run_transformer_lm(
     d_ff: int,
     attn_pdrop: float,
     residual_pdrop: float,
-    weights: dict[str, torch.FloatTensor],
+    weights: dict[str, torch.Tensor],
     in_indices: torch.LongTensor,
-) -> torch.FloatTensor:
+) -> torch.Tensor:
     """Given the weights of a Transformer language model and input indices,
     return the output of running a forward pass on the input indices.
 
@@ -253,7 +253,7 @@ def run_transformer_lm(
             Apply dropout to the sum of the token and position embeddings
             as well as the output of each sub-layer, before it is added to the
             sub-layer input and normalized (section 5.4).
-        weights: dict[str, torch.FloatTensor]
+        weights: dict[str, torch.Tensor]
             State dict of our reference implementation. {num_layers} refers to an
             integer between `0` and `num_layers - 1` (the layer index).
             The keys of this dictionary are:
@@ -313,9 +313,9 @@ def run_transformer_lm(
 def run_rmsnorm(
     d_model: int,
     eps: float,
-    weights: dict[str, torch.FloatTensor],
-    in_features: torch.FloatTensor,
-) -> torch.FloatTensor:
+    weights: dict[str, torch.Tensor],
+    in_features: torch.Tensor,
+) -> torch.Tensor:
     """Given the weights of a RMSNorm affine transform,
     return the output of running RMSNorm on the input features.
 
@@ -324,13 +324,13 @@ def run_rmsnorm(
             The dimensionality of the RMSNorm input.
         eps: float, default is 1e-5
             A value added to the denominator for numerical stability.
-        weights: dict[str, torch.FloatTensor]
+        weights: dict[str, torch.Tensor]
             State dict of our reference implementation.
             The keys of this dictionary are:
             - `weight`
                 Weights of the RMSNorm affine transform.
                 Shape is (d_model,).
-        in_features: torch.FloatTensor
+        in_features: torch.Tensor
             Input features to run RMSNorm on. Tensor of (*, d_model), where *
             can be an arbitrary number of dimensions with arbitrary values.
 
@@ -342,12 +342,12 @@ def run_rmsnorm(
     return rmsnorm.forward(in_features)
 
 
-def run_gelu(in_features: torch.FloatTensor) -> torch.FloatTensor:
+def run_gelu(in_features: torch.Tensor) -> torch.Tensor:
     """Given a tensor of inputs, return the output of applying GELU
     to each element.
 
     Args:
-        in_features: torch.FloatTensor
+        in_features: torch.Tensor
             Input features to run GELU on. Shape is arbitrary.
 
     Returns:
@@ -384,12 +384,12 @@ def run_get_batch(
     raise NotImplementedError
 
 
-def run_softmax(in_features: torch.FloatTensor, dim: int) -> torch.FloatTensor:
+def run_softmax(in_features: torch.Tensor, dim: int) -> torch.Tensor:
     """Given a tensor of inputs, return the output of softmaxing the given `dim`
     of the input.
 
     Args:
-        in_features: torch.FloatTensor
+        in_features: torch.Tensor
             Input features to softmax. Shape is arbitrary.
         dim: int
             Dimension of the `in_features` to apply softmax to.
@@ -401,12 +401,12 @@ def run_softmax(in_features: torch.FloatTensor, dim: int) -> torch.FloatTensor:
     return softmax(in_features, dim)
 
 
-def run_cross_entropy(inputs: torch.FloatTensor, targets: torch.LongTensor):
+def run_cross_entropy(inputs: torch.Tensor, targets: torch.LongTensor):
     """Given a tensor of inputs and targets, compute the average cross-entropy
     loss across examples.
 
     Args:
-        inputs: torch.FloatTensor
+        inputs: torch.Tensor
             FloatTensor of shape (batch_size, num_classes). inputs[i][j] is the
             unnormalized logit of jth class for the ith example.
         targets: torch.LongTensor

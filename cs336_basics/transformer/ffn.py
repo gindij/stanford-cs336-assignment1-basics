@@ -10,7 +10,7 @@ class FeedForwardNetwork(torch.nn.Module):
         self,
         d_model: int,
         d_ff: Optional[int] = None,
-        weights: Optional[Dict[str, torch.FloatTensor]] = None,
+        weights: Optional[Dict[str, torch.Tensor]] = None,
     ):
         super().__init__()
 
@@ -29,11 +29,9 @@ class FeedForwardNetwork(torch.nn.Module):
         self.w2 = torch.nn.Parameter(w2_weights)
 
     @classmethod
-    def from_weights(
-        cls, weights: Dict[str, torch.FloatTensor]
-    ) -> "FeedForwardNetwork":
+    def from_weights(cls, weights: Dict[str, torch.Tensor]) -> "FeedForwardNetwork":
         d_ff, d_model = weights["w1.weight"].shape
         return cls(d_model, d_ff, weights)
 
-    def forward(self, x: torch.FloatTensor) -> torch.FloatTensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return gelu(x @ self.w1.T) @ self.w2.T  # type: ignore

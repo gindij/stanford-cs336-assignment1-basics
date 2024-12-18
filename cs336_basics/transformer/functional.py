@@ -4,11 +4,11 @@ import numpy as np
 import torch
 
 
-def gelu(x: torch.FloatTensor) -> torch.FloatTensor:
+def gelu(x: torch.Tensor) -> torch.Tensor:
     return 0.5 * x * (1.0 + torch.erf(x / np.sqrt(2)))  # type: ignore
 
 
-def softmax(x: torch.FloatTensor, dim: int) -> torch.FloatTensor:
+def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:
     xmax = torch.max(x, dim, keepdim=True).values
     xadj = x - xmax
     xexp = torch.exp(xadj)
@@ -16,12 +16,12 @@ def softmax(x: torch.FloatTensor, dim: int) -> torch.FloatTensor:
 
 
 def attention(
-    q: torch.FloatTensor,
-    k: torch.FloatTensor,
-    v: torch.FloatTensor,
-    mask: Optional[torch.BoolTensor] = None,
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    mask: Optional[torch.Tensor] = None,
     pdrop: Optional[float] = None,
-) -> torch.FloatTensor:
+) -> torch.Tensor:
     seq_len, dk = k.shape[-2], k.shape[-1]
     a = torch.matmul(q, k.transpose(-1, -2)) / np.sqrt(dk)
     if mask is None:
@@ -30,4 +30,4 @@ def attention(
         dropout_mask = torch.bernoulli(torch.ones_like(mask) * pdrop).bool()
         mask = torch.logical_or(mask, dropout_mask)
     a[..., mask] = -torch.inf
-    return torch.matmul(softmax(a, dim=-1), v)  # type: ignore
+    return torch.matmul(softmax(a, dim=-1), v)
