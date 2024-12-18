@@ -52,7 +52,7 @@ def run_positionwise_feedforward(
     # my_ffn.w1.weight.data = weights["w1.weight"]
     # my_ffn.w2.weight.data = weights["w2.weight"]
 
-    ffn = FeedForwardNetwork.from_weights(weights)
+    ffn = FeedForwardNetwork(d_model, d_ff, weights)
     return ffn.forward(in_features)
 
 
