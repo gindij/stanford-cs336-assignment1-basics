@@ -11,6 +11,9 @@ from cs336_basics.bpe import BPETokenizer
 from cs336_basics.transformer.functional import gelu, softmax, attention
 from cs336_basics.transformer.rmsnorm import RMSNorm
 from cs336_basics.transformer.ffn import FeedForwardNetwork
+from cs336_basics.transformer.causal_multihead_self_attention import (
+    CausalMultiheadSelfAttention,
+)
 
 
 def run_positionwise_feedforward(
@@ -142,7 +145,8 @@ def run_multihead_self_attention(
         torch.Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    mha = CausalMultiheadSelfAttention(num_heads, d_model, attn_pdrop, weights)
+    return mha.forward(in_features)
 
 
 def run_transformer_block(

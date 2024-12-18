@@ -91,6 +91,10 @@ def test_multihead_self_attention():
         weights=reference_weights,
         in_features=in_features,
     )
+    print("expected")
+    print(expected_output[0, :8, :8])
+    print("actual")
+    print(actual_output[0, :8, :8])
     numpy.testing.assert_allclose(
         actual_output.detach().numpy(), expected_output.detach().numpy(), atol=1e-6
     )
