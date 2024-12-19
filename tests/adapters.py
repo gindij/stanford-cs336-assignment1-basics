@@ -15,6 +15,7 @@ from cs336_basics.transformer.causal_multihead_self_attention import (
     CausalMultiheadSelfAttention,
 )
 from cs336_basics.transformer.transformer_block import TransformerBlock
+from cs336_basics.transformer.model import TransformerLM
 
 
 def run_positionwise_feedforward(
@@ -313,7 +314,19 @@ def run_transformer_lm(
         FloatTensor of shape (batch size, sequence_length, vocab_size) with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    lm = TransformerLM(
+        d_model=d_model,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        attn_pdrop=attn_pdrop,
+        residual_pdrop=residual_pdrop,
+        num_layers=num_layers,
+        vocab_size=vocab_size,
+        context_length=context_length,
+        ep_norm=1e-5,
+        weights=weights,
+    )
+    return lm.forward(in_indices)
 
 
 def run_rmsnorm(
