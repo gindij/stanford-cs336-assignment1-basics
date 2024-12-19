@@ -228,6 +228,10 @@ class Vocab:
             vocab[ix] = byts
         return cls(vocab=vocab)
 
+    def add_mapping(self, ix: int, word: str):
+        self._forward_mapping[ix] = word.encode("utf-8")
+        self._inverse_mapping[word.encode("utf-8")] = ix
+
     def convert_strings_to_int_tuples(
         self, strs: List[str], special_tokens: List[str]
     ) -> List[Tuple[int, ...]]:
@@ -416,10 +420,6 @@ class BPETokenizer:
             + ")"
         )
 
-        self._base_vocab = {i: bytes([i]) for i in range(256)}
-        for i, special_token in enumerate(self._special_tokens):
-            self._base_vocab[i + 256] = special_token.encode("utf-8")
-
         self._merges = None
         self._vocab = None
 
@@ -466,16 +466,16 @@ class BPETokenizer:
         return BPETokenizer.from_vocab_and_merges(vocab, merges)
 
     @property
-    def vocab(self) -> Vocab:
+    def vocab(self) -> Dict[int, bytes]:
         if self._vocab is None:
             raise ValueError("tokenizer must be trained to access vocab")
-        return self._vocab
+        return self._vocab.forward_mapping
 
     @property
     def merges(self) -> List[Merge]:
         if self._merges is None:
             raise ValueError("tokenizer must be trained to access merges")
-        return self._merges
+        return [merge.as_bytes_tuple(self.vocab) for merge in self._merges]
 
     def _pretokenize(self, text: str) -> List[str]:
         if not any(stok in text for stok in self._special_tokens):
@@ -529,7 +529,9 @@ class BPETokenizer:
             chunk_size=self._file_chunk_size,
             regex_pattern=self._pretok_regex,
         )
-        num_merges = self._vocab_size - BPETokenizer.BASE_VOCAB_SIZE
+        num_merges = self._vocab_size - (
+            BPETokenizer.BASE_VOCAB_SIZE + len(self._special_tokens)
+        )
         merges = []
         base_vocab = {i: bytes([i]) for i in range(BPETokenizer.BASE_VOCAB_SIZE)}
         new_vocab = {}
@@ -550,6 +552,9 @@ class BPETokenizer:
 
         self._merges = merges
         self._vocab = Vocab.from_base_and_new(base_vocab, new_vocab, merges)
+
+        for i, special_token in enumerate(self._special_tokens):
+            self._vocab.add_mapping(i + len(self._vocab), special_token)
 
     def save(self, vocab_path: str, merges_path: str):
         """
