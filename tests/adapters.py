@@ -18,6 +18,7 @@ from cs336_basics.transformer.transformer_block import TransformerBlock
 from cs336_basics.transformer.model import TransformerLM
 from cs336_basics.optimizer.adamw import AdamW
 from cs336_basics.optimizer.learning_rate_scheduler import get_cosine_annealing_lr
+from cs336_basics.utils import clip_gradients
 
 
 def run_positionwise_feedforward(
@@ -452,7 +453,7 @@ def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm:
     Returns:
         None
     """
-    raise NotImplementedError
+    return clip_gradients(parameters, max_l2_norm)
 
 
 def get_adamw_cls() -> Type[torch.optim.Optimizer]:
