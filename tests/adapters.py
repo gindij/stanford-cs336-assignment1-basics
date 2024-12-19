@@ -8,7 +8,7 @@ import numpy.typing as npt
 import torch
 
 from cs336_basics.bpe import BPETokenizer
-from cs336_basics.transformer.functional import gelu, softmax, attention
+from cs336_basics.transformer.functional import gelu, softmax, attention, cross_entropy
 from cs336_basics.transformer.rmsnorm import RMSNorm
 from cs336_basics.transformer.ffn import FeedForwardNetwork
 from cs336_basics.transformer.causal_multihead_self_attention import (
@@ -435,7 +435,7 @@ def run_cross_entropy(inputs: torch.Tensor, targets: torch.LongTensor):
     Returns:
         Tensor of shape () with the average cross-entropy loss across examples.
     """
-    raise NotImplementedError
+    return cross_entropy(inputs, targets)
 
 
 def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float):

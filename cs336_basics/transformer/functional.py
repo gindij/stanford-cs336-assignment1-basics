@@ -36,3 +36,25 @@ def attention(
         mask = dropout(mask, pdrop)
     a[..., mask] = -torch.inf
     return torch.matmul(softmax(a, dim=-1), v)
+
+
+def cross_entropy(
+    logits: torch.Tensor, targets: torch.Tensor, reduce: str = "mean"
+) -> torch.Tensor:
+    # logits is [batch_size * seq_len, vocab_size]
+    # targets is [batch_size * seq_len]
+    Dm, _ = logits.shape
+    logits -= torch.max(logits, dim=1, keepdim=True).values
+    true_logit = logits[torch.arange(Dm), targets]
+    log_sum_exp = torch.logsumexp(logits, dim=1, keepdim=True)
+    cross_entropies = -true_logit + log_sum_exp
+    if reduce == "mean":
+        return torch.mean(-true_logit + log_sum_exp)
+    if reduce == "none":
+        return cross_entropies
+    raise ValueError(f"unknown reduction {reduce}")
+
+
+def perplexity(logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    cross_entropies = cross_entropy(logits, targets, reduce="none")
+    return torch.exp(torch.mean(cross_entropies))
