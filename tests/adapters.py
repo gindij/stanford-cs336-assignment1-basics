@@ -16,6 +16,7 @@ from cs336_basics.transformer.causal_multihead_self_attention import (
 )
 from cs336_basics.transformer.transformer_block import TransformerBlock
 from cs336_basics.transformer.model import TransformerLM
+from cs336_basics.optimizer.adamw import AdamW
 
 
 def run_positionwise_feedforward(
@@ -457,7 +458,7 @@ def get_adamw_cls() -> Type[torch.optim.Optimizer]:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
     """
-    raise NotImplementedError
+    return AdamW
 
 
 def run_get_lr_cosine_schedule(
