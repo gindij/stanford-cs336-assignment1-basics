@@ -17,6 +17,7 @@ from cs336_basics.transformer.causal_multihead_self_attention import (
 from cs336_basics.transformer.transformer_block import TransformerBlock
 from cs336_basics.transformer.model import TransformerLM
 from cs336_basics.optimizer.adamw import AdamW
+from cs336_basics.optimizer.learning_rate_scheduler import get_cosine_annealing_lr
 
 
 def run_positionwise_feedforward(
@@ -491,7 +492,9 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    return get_cosine_annealing_lr(
+        it, min_learning_rate, max_learning_rate, warmup_iters, cosine_cycle_iters
+    )
 
 
 def run_save_checkpoint(
