@@ -15,6 +15,12 @@ def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:
     return xexp / torch.sum(xexp, dim=dim, keepdim=True)  #
 
 
+def dropout(x: torch.Tensor, p: float, training: bool = True):
+    if not training:
+        return x
+    return x * torch.bernoulli(torch.ones_like(x) * (1 - p))
+
+
 def attention(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -27,7 +33,6 @@ def attention(
     if mask is None:
         mask = torch.zeros((seq_len, seq_len)).bool()
     if pdrop is not None and pdrop > 0.0:
-        dropout_mask = torch.bernoulli(torch.ones_like(mask) * pdrop).bool()
-        mask = torch.logical_or(mask, dropout_mask)
+        mask = dropout(mask, pdrop)
     a[..., mask] = -torch.inf
     return torch.matmul(softmax(a, dim=-1), v)

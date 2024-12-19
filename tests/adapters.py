@@ -14,6 +14,7 @@ from cs336_basics.transformer.ffn import FeedForwardNetwork
 from cs336_basics.transformer.causal_multihead_self_attention import (
     CausalMultiheadSelfAttention,
 )
+from cs336_basics.transformer.transformer_block import TransformerBlock
 
 
 def run_positionwise_feedforward(
@@ -218,7 +219,8 @@ def run_transformer_block(
         FloatTensor of shape (batch_size, sequence_length, d_model) with the output of
         running the Transformer block on the input features.
     """
-    raise NotImplementedError
+    tb = TransformerBlock(d_model, num_heads, d_ff, attn_pdrop, residual_pdrop, weights)
+    return tb.forward(in_features)
 
 
 def run_transformer_lm(
@@ -342,7 +344,7 @@ def run_rmsnorm(
         FloatTensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    rmsnorm = RMSNorm(d_model=d_model, epsilon=eps, state=weights)
+    rmsnorm = RMSNorm(d_model=d_model, epsilon=eps, weights=weights)
     return rmsnorm.forward(in_features)
 
 

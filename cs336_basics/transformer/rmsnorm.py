@@ -17,8 +17,8 @@ class RMSNorm(torch.nn.Module):
         super().__init__()
         self.ep = epsilon
         self.d_model = d_model
-        self.g = torch.nn.Parameter(weights.get("weight", torch.randn((d_model,))))
+        self.weight = torch.nn.Parameter(weights.get("weight", torch.randn((d_model,))))
 
     def forward(self, a: torch.Tensor) -> torch.Tensor:
         rms = torch.sqrt(torch.mean(a**2, dim=-1, keepdim=True) + self.ep)
-        return a * self.g.view(1, 1, -1) / rms
+        return a * self.weight.view(1, 1, -1) / rms
