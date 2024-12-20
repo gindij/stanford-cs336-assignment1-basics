@@ -29,11 +29,6 @@ class TransformerLM(torch.nn.Module):
         self.num_layers = num_layers
         self.residual_pdrop = residual_pdrop
 
-        print(f"{vocab_size = }")
-        print(f"{context_length = }")
-        print(f"{d_model = }")
-        print(weights["token_embeddings.weight"].T.shape)
-
         self.token_embeddings = torch.nn.Parameter(
             torch.randn(vocab_size, d_model)
             if weights is None

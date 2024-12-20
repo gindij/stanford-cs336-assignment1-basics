@@ -19,6 +19,7 @@ from cs336_basics.transformer.model import TransformerLM
 from cs336_basics.optimizer.adamw import AdamW
 from cs336_basics.optimizer.learning_rate_scheduler import get_cosine_annealing_lr
 from cs336_basics.utils import clip_gradients
+from cs336_basics.data import get_batch
 
 
 def run_positionwise_feedforward(
@@ -403,7 +404,7 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    raise NotImplementedError
+    return get_batch(dataset, batch_size, context_length, device)
 
 
 def run_softmax(in_features: torch.Tensor, dim: int) -> torch.Tensor:
