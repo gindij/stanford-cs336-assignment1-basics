@@ -18,7 +18,7 @@ from cs336_basics.transformer.transformer_block import TransformerBlock
 from cs336_basics.transformer.model import TransformerLM
 from cs336_basics.optimizer.adamw import AdamW
 from cs336_basics.optimizer.learning_rate_scheduler import get_cosine_annealing_lr
-from cs336_basics.utils import clip_gradients
+from cs336_basics.utils import clip_gradients, save_checkpoint, load_checkpoint
 from cs336_basics.data import get_batch
 
 
@@ -519,7 +519,7 @@ def run_save_checkpoint(
         out: str | os.PathLike | BinaryIO | IO[bytes]
             Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+    save_checkpoint(model, optimizer, iteration, out)
 
 
 def run_load_checkpoint(
@@ -543,7 +543,7 @@ def run_load_checkpoint(
     Returns:
         int, the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+    return load_checkpoint(src, model, optimizer)
 
 
 def get_tokenizer(
