@@ -25,9 +25,6 @@ class TransformerBlock(torch.nn.Module):
 
         super().__init__()
 
-        if weights is None:
-            weights = {}
-
         self.d_model = d_model
         self.d_ff = d_ff
         self.num_heads = num_heads
@@ -68,7 +65,7 @@ class TransformerBlock(torch.nn.Module):
         d_model: int,
         num_heads: int,
         attn_pdrop: float,
-        weights: Dict[str, torch.Tensor],
+        weights: Optional[Dict[str, torch.Tensor]],
     ) -> CausalMultiheadSelfAttention:
         if weights is None:
             return CausalMultiheadSelfAttention(

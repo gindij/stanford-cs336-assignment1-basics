@@ -12,9 +12,10 @@ class AdamW(Optimizer):
         self,
         params: Iterable[torch.Tensor] | Iterable[Dict[str, Any]],
         lr: float,
-        betas: Tuple[float, float],
-        eps: float,
-        weight_decay: float,
+        betas: Tuple[float, float] = (0.9, 0.999),
+        eps: float = 1e-8,
+        weight_decay: float = 0.95,
+        device: str = "cpu",
     ):
         defaults = {"lr": lr}
         super().__init__(params, defaults)
@@ -22,6 +23,7 @@ class AdamW(Optimizer):
         self.beta1, self.beta2 = betas
         self.ep = eps
         self.weight_decay = weight_decay
+        self.device = device
 
     def step(self, closure: Optional[Callable] = None):
         loss = None if closure is None else closure()
@@ -35,9 +37,9 @@ class AdamW(Optimizer):
                 state = self.state[p]
 
                 t = state.get("t", 1)
-                m, v = state.get("m", torch.zeros(grad.shape)), state.get(
-                    "v", torch.zeros(grad.shape)
-                )
+                m, v = state.get(
+                    "m", torch.zeros(grad.shape).to(self.device)
+                ), state.get("v", torch.zeros(grad.shape).to(self.device))
 
                 m = self.beta1 * m + (1 - self.beta1) * grad
                 mhat = m / (1 - self.beta1**t)
@@ -45,7 +47,7 @@ class AdamW(Optimizer):
                 vhat = v / (1 - self.beta2**t)
 
                 p.data = p.data * (1 - lr * self.weight_decay)
-                p.data = p.data - lr * mhat / (np.sqrt(vhat) + self.ep)
+                p.data = p.data - lr * mhat / (torch.sqrt(vhat) + self.ep)
 
                 state["m"] = m
                 state["v"] = v

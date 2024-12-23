@@ -15,4 +15,7 @@ def get_batch(
         ix_start = random.randint(0, n - context_length - 1)
         data_batch[ix_batch, :] = x[ix_start : ix_start + context_length]
         label_batch[ix_batch, :] = x[ix_start + 1 : ix_start + context_length + 1]
-    return (torch.Tensor(data_batch).to(device), torch.Tensor(label_batch).to(device))
+    return (
+        torch.Tensor(data_batch).int().to(device),
+        torch.Tensor(label_batch).int().to(device),
+    )

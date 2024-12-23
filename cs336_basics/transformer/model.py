@@ -3,7 +3,7 @@ from typing import Optional, Dict
 import torch
 
 from cs336_basics.transformer.rmsnorm import RMSNorm
-from cs336_basics.transformer.functional import dropout, softmax
+from cs336_basics.transformer.functional import dropout
 from cs336_basics.transformer.transformer_block import TransformerBlock
 
 

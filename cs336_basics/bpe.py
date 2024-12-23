@@ -458,9 +458,7 @@ class BPETokenizer:
             merges = []
             for line in file:
                 tup = tuple(line.strip().split("\t"))
-                merges.append(
-                    Merge.from_bytes(b64.b64decode(tup[0]), b64.b64decode(tup[1]))
-                )
+                merges.append((b64.b64decode(tup[0]), b64.b64decode(tup[1])))
         with open(vocab_path, "r", encoding="utf-8") as file:
             vocab = {int(k): b64.b64decode(v) for k, v in json.load(file).items()}
         return BPETokenizer.from_vocab_and_merges(vocab, merges)

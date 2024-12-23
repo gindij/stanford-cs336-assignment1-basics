@@ -34,7 +34,7 @@ def attention(
         mask = torch.zeros((seq_len, seq_len)).bool()
     if pdrop is not None and pdrop > 0.0:
         mask = dropout(mask, pdrop)
-    a[..., mask] = -torch.inf
+    a[..., mask.bool()] = -torch.inf
     return torch.matmul(softmax(a, dim=-1), v)
 
 
