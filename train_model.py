@@ -71,7 +71,11 @@ def main():
     if not os.path.exists(args.checkpoint_dir):
         os.makedirs(args.checkpoint_dir)
 
-    device = "mps"
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+    elif torch.backends.mps.is_available():
+        device = "mps"
 
     model = TransformerLM(
         d_model=args.d_model,
