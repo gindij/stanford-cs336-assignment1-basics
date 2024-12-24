@@ -77,7 +77,9 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
             .transpose(1, 2)
         )
         mask = generate_causal_attn_mask(seq_len)
-        attn_output = attention(q, k, v, mask=mask, pdrop=self.attn_pdrop)
+        attn_output = attention(
+            q, k, v, mask=mask, pdrop=self.attn_pdrop, training=self.training
+        )
         attn_output = (
             attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, -1)
         )

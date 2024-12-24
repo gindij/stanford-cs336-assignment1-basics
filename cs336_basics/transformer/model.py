@@ -78,7 +78,7 @@ class TransformerLM(torch.nn.Module):
         x_pos = torch.arange(seq_len).repeat(batch_size, 1)
         pos_embs = self.position_embeddings[x_pos]
         emb_sum = tok_embs + pos_embs
-        xx = dropout(emb_sum, self.residual_pdrop)
+        xx = dropout(emb_sum, self.residual_pdrop, training=self.training)
         for tblock in self.transformer_blocks:
             xx = tblock(xx)
         xx = self.ln_final(xx)

@@ -1,7 +1,6 @@
 from collections.abc import Iterable, Callable
 from typing import Any, Dict, Optional, Tuple
 
-import numpy as np
 import torch
 from torch.optim import Optimizer
 

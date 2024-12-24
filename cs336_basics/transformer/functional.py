@@ -27,12 +27,13 @@ def attention(
     v: torch.Tensor,
     mask: Optional[torch.Tensor] = None,
     pdrop: Optional[float] = None,
+    training: Optional[bool] = True,
 ) -> torch.Tensor:
     seq_len, dk = k.shape[-2], k.shape[-1]
     a = torch.matmul(q, k.transpose(-1, -2)) / np.sqrt(dk)
     if mask is None:
         mask = torch.zeros((seq_len, seq_len)).bool()
-    if pdrop is not None and pdrop > 0.0:
+    if training and (pdrop is not None and pdrop > 0.0):
         mask = dropout(mask, pdrop)
     a[..., mask.bool()] = -torch.inf
     return torch.matmul(softmax(a, dim=-1), v)
