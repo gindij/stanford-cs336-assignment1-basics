@@ -6,13 +6,17 @@ import torch
 
 
 def get_batch(
-    x: np.ndarray, batch_size: int, context_length: int, device: str
+    x: np.ndarray,
+    batch_size: int,
+    context_length: int,
+    device: str,
+    rng: random.Random = random.Random(),
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     n = len(x)
     data_batch = np.zeros((batch_size, context_length))
     label_batch = np.zeros((batch_size, context_length))
     for ix_batch in range(batch_size):
-        ix_start = random.randint(0, n - context_length - 1)
+        ix_start = rng.randint(0, n - context_length - 1)
         data_batch[ix_batch, :] = x[ix_start : ix_start + context_length]
         label_batch[ix_batch, :] = x[ix_start + 1 : ix_start + context_length + 1]
     return (
