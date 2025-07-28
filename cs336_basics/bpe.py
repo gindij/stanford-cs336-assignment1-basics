@@ -7,13 +7,13 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 import regex as re
 import tqdm
 
-GPT2_PRETOK_REGEX = (
-    r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-)
+GPT2_PRETOK_REGEX = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
 
 def apply_merge_to_word(
-    word: Tuple[int, ...], pair_to_merge: Tuple[int, int], new_ix: int
+    word: Tuple[int, ...],
+    pair_to_merge: Tuple[int, int],
+    new_ix: int,
 ) -> Tuple[int, ...]:
     """
     Apply a merge operation to a word. Here, a word is a tuple of integers, where each
@@ -26,14 +26,19 @@ def apply_merge_to_word(
     """
     if len(word) == 1:
         return word
+
+    pair_found = False
+    for pair in zip(word, word[1:]):
+        if pair == pair_to_merge:
+            pair_found = True
+            break
+    if not pair_found:
+        return word
+
     new_word = []
     i = 0
     while i < len(word):
-        if (
-            i < len(word) - 1
-            and word[i] == pair_to_merge[0]
-            and word[i + 1] == pair_to_merge[1]
-        ):
+        if i < len(word) - 1 and word[i] == pair_to_merge[0] and word[i + 1] == pair_to_merge[1]:
             new_word.append(new_ix)
             i += 2
         else:
@@ -42,9 +47,7 @@ def apply_merge_to_word(
     return tuple(new_word)
 
 
-def replace_pairs_by_location(
-    word: Tuple[int], locations: Set[int], new_ix: int
-) -> Tuple[int]:
+def replace_pairs_by_location(word: Tuple[int], locations: Set[int], new_ix: int) -> Tuple[int]:
     """
     Replace all occurrences of a pair in a word with a new integer, based on the locations
     where the pair occurs in the word.
@@ -102,9 +105,7 @@ class Merge:
         """
         return cls(left, right)
 
-    def as_int_tuple(
-        self, reverse_vocab: Optional[Dict[bytes, int]] = None
-    ) -> Tuple[int, int]:
+    def as_int_tuple(self, reverse_vocab: Optional[Dict[bytes, int]] = None) -> Tuple[int, int]:
         """
         Get the pair of integers represented by the Merge object.
 
@@ -120,9 +121,7 @@ class Merge:
             reverse_vocab[self._right],
         )
 
-    def as_bytes_tuple(
-        self, vocab: Optional[Dict[int, bytes]] = None
-    ) -> Tuple[bytes, bytes]:
+    def as_bytes_tuple(self, vocab: Optional[Dict[int, bytes]] = None) -> Tuple[bytes, bytes]:
         """
         Get the pair of bytes represented by the Merge object.
 
@@ -136,9 +135,7 @@ class Merge:
         return (vocab[self._left], vocab[self._right])
 
 
-def int2bytes(
-    ix: int, base: Dict[int, bytes], new: Dict[int, Tuple[int, int]]
-) -> bytes:
+def int2bytes(ix: int, base: Dict[int, bytes], new: Dict[int, Tuple[int, int]]) -> bytes:
     """
     Recursively convert an integer to a sequence of bytes based on a
     base vocabulary and a new vocabulary.
@@ -232,9 +229,7 @@ class Vocab:
         self._forward_mapping[ix] = word.encode("utf-8")
         self._inverse_mapping[word.encode("utf-8")] = ix
 
-    def convert_strings_to_int_tuples(
-        self, strs: List[str], special_tokens: List[str]
-    ) -> List[Tuple[int, ...]]:
+    def convert_strings_to_int_tuples(self, strs: List[str], special_tokens: List[str]) -> List[Tuple[int, ...]]:
         """
         Convert a list of strings to a list of tuples of integers based on the vocabulary
         and special tokens.
@@ -247,11 +242,11 @@ class Vocab:
         int_tups = []
         for s in strs:
             if s in special_tokens:
-                idxs = [self._inverse_mapping[bytes(s, "utf-8")]]
+                idxs = [self._inverse_mapping[s.encode("utf-8")]]
             else:
                 byte_list = [bytes([b]) for b in bytes(s, "utf-8")]
                 idxs = [self._inverse_mapping[byt] for byt in byte_list]
-            int_tups.append(idxs)
+            int_tups.append(tuple(idxs))
         return int_tups
 
     def save(self, path: str):
@@ -262,10 +257,7 @@ class Vocab:
         """
         with open(path, "w", encoding="utf-8") as file:
             json.dump(
-                {
-                    i: b64.b64encode(bs).decode("ascii")
-                    for i, bs in self._forward_mapping.items()
-                },
+                {i: b64.b64encode(bs).decode("ascii") for i, bs in self._forward_mapping.items()},
                 file,
             )
 
@@ -290,14 +282,10 @@ class PairIndex:
         self._word_counts = collections.defaultdict(int)
         self._pair2count = collections.defaultdict(int)
         self._pair2words = collections.defaultdict(set)
-        self._word2pairlocs = collections.defaultdict(
-            lambda: collections.defaultdict(set)
-        )
+        self._word2pairlocs = collections.defaultdict(lambda: collections.defaultdict(set))
 
     @classmethod
-    def from_file(
-        cls, input_path: str, chunk_size: int, regex_pattern: str
-    ) -> "PairIndex":
+    def from_file(cls, input_path: str, chunk_size: int, regex_pattern: str) -> "PairIndex":
         """
         Create a PairIndex object from a file of text data. The file is read in chunks
         in case the input is too large to fit in memory.
@@ -322,12 +310,7 @@ class PairIndex:
                 matches = list(re.finditer(regex_pattern, data))
 
                 if len(matches) > 1:
-                    pair_index.add_words(
-                        [
-                            tuple(match.group(0).encode("utf-8"))
-                            for match in matches[:-1]
-                        ]
-                    )
+                    pair_index.add_words([tuple(match.group(0).encode("utf-8")) for match in matches[:-1]])
                     last_match = matches[-2]
                 elif len(matches) == 1:
                     pair_index.add_words([tuple(matches[0].group(0).encode("utf-8"))])
@@ -387,9 +370,7 @@ class PairIndex:
         impacted_words = self._pair2words[merge].copy()
         for word in impacted_words:
             count = self._word_counts[word]
-            merged_word = replace_pairs_by_location(
-                word, self._word2pairlocs[word][merge], new_ix
-            )
+            merged_word = replace_pairs_by_location(word, self._word2pairlocs[word][merge], new_ix)
             self._remove_word(word, count)
             self._add_word(merged_word, count)
 
@@ -410,18 +391,12 @@ class BPETokenizer:
         self._special_tokens = special_tokens or []
         self._pretok_regex = pretokenization_pattern
         self._special_token_regex = (
-            "("
-            + "|".join(
-                [
-                    re.escape(stok)
-                    for stok in sorted(self._special_tokens, key=len, reverse=True)
-                ]
-            )
-            + ")"
+            "(" + "|".join([re.escape(stok) for stok in sorted(self._special_tokens, key=len, reverse=True)]) + ")"
         )
 
         self._merges = None
         self._vocab = None
+        self._cache = {}
 
     @classmethod
     def from_vocab_and_merges(
@@ -445,14 +420,20 @@ class BPETokenizer:
         return tokenizer
 
     @classmethod
-    def from_files(cls, vocab_path: str, merges_path: str) -> "BPETokenizer":
+    def from_files(
+        cls,
+        vocab_path: str,
+        merges_path: str,
+        special_tokens: Optional[List[str]] = None,
+    ) -> "BPETokenizer":
         """
         Create a BPETokenizer object from files containing a vocabulary mapping and a list
         of merge operations. (See from_vocab_and_merges.)
 
         :param vocab_path: The path to the vocabulary (json) file.
         :param merges_path: The path to the merges (txt) file.
-        :return: _description_
+        :param special_tokens: The special tokens to initialize with.
+        :return: A tokenizer initialized from sets of merges and a vocabulary
         """
         with open(merges_path, "r", encoding="utf-8") as file:
             merges = []
@@ -461,7 +442,7 @@ class BPETokenizer:
                 merges.append((b64.b64decode(tup[0]), b64.b64decode(tup[1])))
         with open(vocab_path, "r", encoding="utf-8") as file:
             vocab = {int(k): b64.b64decode(v) for k, v in json.load(file).items()}
-        return BPETokenizer.from_vocab_and_merges(vocab, merges)
+        return BPETokenizer.from_vocab_and_merges(vocab, merges, special_tokens)
 
     @property
     def vocab(self) -> Dict[int, bytes]:
@@ -503,10 +484,14 @@ class BPETokenizer:
                 continue
 
             if count == max_count:
-                # if the counts are equal, we have to resolve the pieces of the pair
-                # separately and compare them for lexical order
+                # if the counts are equal, we have to resolve the pieces of
+                # the pair separately and compare them for lexical order
                 ip_pair = ipair2bpair(pair, base_vocab, new_vocab)
-                max_ip_pair = ipair2bpair(most_frequent_pair, base_vocab, new_vocab)
+                max_ip_pair = ipair2bpair(
+                    most_frequent_pair,
+                    base_vocab,
+                    new_vocab,
+                )
                 if ip_pair > max_ip_pair:
                     max_count = count
                     most_frequent_pair = pair
@@ -527,9 +512,7 @@ class BPETokenizer:
             chunk_size=self._file_chunk_size,
             regex_pattern=self._pretok_regex,
         )
-        num_merges = self._vocab_size - (
-            BPETokenizer.BASE_VOCAB_SIZE + len(self._special_tokens)
-        )
+        num_merges = self._vocab_size - (BPETokenizer.BASE_VOCAB_SIZE + len(self._special_tokens))
         merges = []
         base_vocab = {i: bytes([i]) for i in range(BPETokenizer.BASE_VOCAB_SIZE)}
         new_vocab = {}
@@ -573,11 +556,17 @@ class BPETokenizer:
                 right = b64.b64encode(merge_byte_pair.right).decode("ascii")
                 file.write(f"{left}\t{right}\n")
 
-    def _apply_all_merges(self, merges, token):
-        merged_token = token
-        for j, merge in enumerate(merges):
-            merged_token = apply_merge_to_word(merged_token, merge, 256 + j)
-        return merged_token
+    def _apply_all_merges(self, merges, token_ids):
+
+        while len(token_ids) >= 2:
+            # the pair with the lowest merge index
+            pairs = list(zip(token_ids, token_ids[1:]))
+            pair = min(pairs, key=lambda p: merges.get(p, float("inf")))
+            if pair not in merges:
+                break  # cant merge anything else
+            merge_idx = self.BASE_VOCAB_SIZE + merges[pair]
+            token_ids = apply_merge_to_word(token_ids, pair, merge_idx)
+        return token_ids
 
     def encode(self, text: str) -> List[int]:
         """
@@ -589,14 +578,20 @@ class BPETokenizer:
         assert self._merges is not None
         assert self._vocab is not None
         pretokens = self._vocab.convert_strings_to_int_tuples(
-            self._pretokenize(text), self._special_tokens
+            self._pretokenize(text),
+            self._special_tokens,
         )
-        int_merges = [
-            merge.as_int_tuple(self._vocab.inverse_mapping) for merge in self._merges
-        ]
-        for i, pretoken in enumerate(pretokens):
-            pretokens[i] = self._apply_all_merges(int_merges, pretoken)
-        return [id_ for merged_pretoken in pretokens for id_ in merged_pretoken]
+
+        merge_dict = {merge.as_int_tuple(self._vocab.inverse_mapping): i for i, merge in enumerate(self._merges)}
+        token_ids = []
+        for pretoken in pretokens:
+            if pretoken in self._cache:
+                token_ids.extend(self._cache[pretoken])
+            else:
+                post_merge_pretoken = self._apply_all_merges(merge_dict, pretoken)
+                self._cache[pretoken] = post_merge_pretoken
+                token_ids.extend(post_merge_pretoken)
+        return token_ids
 
     def encode_iterable(self, iterable: Iterable[str]):
         """

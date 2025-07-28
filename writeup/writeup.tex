@@ -1,0 +1,40 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{CS336 HW1 Writeup}
+\author{Jack Gindi}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Unicode}
+Question 1:
+\begin{enumerate}
+    \item[(a)] The code \texttt{chr(0)} returns \texttt{\textbackslash 0x00}.
+    \item[(b)] The string shows the answer from (a), while printing doesn't show anything.
+    \item[(c)] This character seems to be ignored when printed, but its representation from (a) appears when inspecting the printed value.
+\end{enumerate}
+
+\noindent Question 2:
+\begin{enumerate}
+    \item[(a)] The UTF-16 (16-bit) and UTF-32 (32-bit) encodings add zero-padding to each byte and make the encoding unnecessarily long.
+    \item[(b)] Any multibyte character will cause the function to fail. The first byte in the sequence would fail because it indicates that we should expect more than one byte, but it will only try to decode one byte.
+    \item[(c)] In binary, a valid two-byte sequence has the form \texttt{110xxxxx10xxxxxx}, where the \texttt{x}s can be 0 or 1. To create an invalid two-byte sequence, we can just make the first byte \texttt{\textbackslash 0x0y}, where \texttt{y} is any hexadecimal digit.
+\end{enumerate}
+
+\section*{Tokenizer Experiments}
+\begin{enumerate}
+    \item[(a)] The TS tokenizer had a compression ratio of 4.05 bytes per token, whereas the OWT tokenizer had a compression ratio of 4.48 bytes per token.
+    \item[(b)] The compression ratio of the TS tokenizer on OWT data is 3.39 bytes per token, and the compression ratio of OWT on TS data is 3.94 bytes per token. These lower compression ratios make sense, since the merges found using BPE on one corpus would be less efficient encoding data from another corpus.
+    \item[(c)] To find out how much time it would take to decode 825GB of text, we divided the size of the Pile dataset in bytes by the bytes per second for the OWT tokenizer. We found that with throughput of about 380k bytes per second, it would take 600 hours ($\approx 25$ days).
+    \item[(d)] The \texttt{uint16} datatype has the right size because 16 bytes can hold a total of $2^{16} = 65536$ different values, which it suitable for vocabularies of size O(10000).
+\end{enumerate}
+
+\end{document}
