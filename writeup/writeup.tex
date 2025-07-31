@@ -33,8 +33,12 @@ Question 1:
 \begin{enumerate}
     \item[(a)] The TS tokenizer had a compression ratio of 4.05 bytes per token, whereas the OWT tokenizer had a compression ratio of 4.48 bytes per token.
     \item[(b)] The compression ratio of the TS tokenizer on OWT data is 3.39 bytes per token, and the compression ratio of OWT on TS data is 3.94 bytes per token. These lower compression ratios make sense, since the merges found using BPE on one corpus would be less efficient encoding data from another corpus.
-    \item[(c)] To find out how much time it would take to decode 825GB of text, we divided the size of the Pile dataset in bytes by the bytes per second for the OWT tokenizer. We found that with throughput of about 380k bytes per second, it would take 600 hours ($\approx 25$ days).
+    \item[(c)] To find out how much time it would take to decode 825GB of text, we divided the size of the Pile dataset in bytes by the bytes per second for the OWT tokenizer. We found that with throughput of about 1MB per second, it would take 220 hours (just shy of 10 days).
     \item[(d)] The \texttt{uint16} datatype has the right size because 16 bytes can hold a total of $2^{16} = 65536$ different values, which it suitable for vocabularies of size O(10000).
 \end{enumerate}
+
+\section*{SGD Experiments}
+The larger the learning rate, the faster the loss decays. This is because the loss is the average square model weight, which the model can optimize easily by just pushing all parameter values to zero. The larger the learning rate, the faster the weights will decay (in the absence of forces causing them not to).
+
 
 \end{document}

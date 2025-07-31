@@ -1,6 +1,14 @@
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.pdf
+*.synctex.gz
+
+wandb/
 data/
 tokenizer_outputs/
-checkpoints/
+checkpoints*/
 tokens/
 
 # Byte-compiled / optimized / DLL files
