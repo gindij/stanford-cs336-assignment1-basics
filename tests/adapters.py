@@ -494,9 +494,7 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    return get_cosine_annealing_lr(
-        it, min_learning_rate, max_learning_rate, warmup_iters, cosine_cycle_iters
-    )
+    return get_cosine_annealing_lr(it, min_learning_rate, max_learning_rate, warmup_iters, cosine_cycle_iters)
 
 
 def run_save_checkpoint(
@@ -569,9 +567,7 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    return BPETokenizer.from_vocab_and_merges(
-        vocab=vocab, merges=merges, special_tokens=special_tokens
-    )
+    return BPETokenizer.from_vocab_and_merges(vocab=vocab, merges=merges, special_tokens=special_tokens)
 
 
 def run_train_bpe(
@@ -606,4 +602,4 @@ def run_train_bpe(
     """
     bpt = BPETokenizer(vocab_size=vocab_size, special_tokens=special_tokens)
     bpt.train(input_path=input_path)
-    return (bpt.vocab, bpt.merges)
+    return (bpt.itob, bpt.merges)

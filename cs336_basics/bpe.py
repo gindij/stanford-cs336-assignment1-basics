@@ -242,10 +242,16 @@ class BPETokenizer:
         return BPETokenizer.from_vocab_and_merges(vocab, merges, special_tokens)
 
     @property
-    def vocab(self) -> Dict[int, bytes]:
+    def itob(self) -> Dict[int, bytes]:
         if self._vocab is None:
             raise ValueError("tokenizer must be trained to access vocab")
         return self._vocab
+
+    @property
+    def btoi(self) -> Dict[bytes, int]:
+        if self._reverse_vocab is None:
+            raise ValueError("tokenizer must be trained to access vocab")
+        return self._reverse_vocab
 
     @property
     def merges(self) -> List[Tuple[bytes, bytes]]:
@@ -316,7 +322,7 @@ class BPETokenizer:
 
         with open(vocab_path, "w", encoding="utf-8") as file:
             json.dump(
-                {i: b64.b64encode(bs).decode("ascii") for i, bs in self.vocab.items()},
+                {i: b64.b64encode(bs).decode("ascii") for i, bs in self.itob.items()},
                 file,
             )
 
