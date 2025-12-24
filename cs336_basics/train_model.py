@@ -114,8 +114,9 @@ for epoch in epoch_pbar:
                     context_length=args.context_length,
                     device=device,
                 )
+                y = y.flatten()
                 yhat = model(x).view(-1, args.vocab_size)
-                loss = cross_entropy(yhat, y.flatten())
+                loss = cross_entropy(yhat, y)
                 total_eval_loss += loss.item()
 
             run.log(
