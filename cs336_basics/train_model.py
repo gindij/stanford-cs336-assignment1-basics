@@ -37,6 +37,7 @@ parser.add_argument("--num-eval-batches", type=int, default=100)
 parser.add_argument("--save-every", type=int, default=10)
 parser.add_argument("--checkpoint-dir", type=str, default="checkpoints")
 parser.add_argument("--start-from", type=str, default="new")
+parser.add_argument("--token-dir", type=str, default="ts_tokens")
 
 parser.add_argument("--dataset", type=str, default="ts")
 args = parser.parse_args()
@@ -86,22 +87,13 @@ if args.start_from == "latest" and os.path.exists(args.checkpoint_dir):
 if not os.path.exists(args.checkpoint_dir):
     os.makedirs(args.checkpoint_dir)
 
-assert args.dataset in {"ts", "owt"}
-train_data = np.load(f"tokens/{args.dataset}_train.npy", mmap_mode="r")
-valid_data = np.load(f"tokens/{args.dataset}_valid.npy", mmap_mode="r")
+train_data = np.load(f"{args.token_dir}/train.npy", mmap_mode="r")
+valid_data = np.load(f"{args.token_dir}/valid.npy", mmap_mode="r")
 
 epoch_pbar = tqdm.tqdm(range(iteration, args.epochs), desc="Epochs")
 for epoch in epoch_pbar:
 
     model.train()
-
-    if epoch % args.save_every == 0:
-        save_checkpoint(
-            model,
-            optimizer,
-            epoch,
-            os.path.join(args.checkpoint_dir, f"{str(epoch).zfill(5)}.pt"),
-        )
 
     if epoch % args.eval_every == 0:
         model.eval()
@@ -154,6 +146,14 @@ for epoch in epoch_pbar:
         total_train_loss += loss.item()
 
         batch_pbar.set_postfix({"mean_loss": total_train_loss / (i + 1)})
+
+    if epoch % args.save_every == 0 or epoch == args.epochs - 1:
+        save_checkpoint(
+            model,
+            optimizer,
+            epoch,
+            os.path.join(args.checkpoint_dir, f"{str(epoch).zfill(5)}.pt"),
+        )
 
     # Log metrics to wandb.
     run.log({"mean_epoch_train_loss": total_train_loss / args.num_train_batches}, step=epoch)

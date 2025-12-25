@@ -441,4 +441,4 @@ class BPETokenizer:
         :return: The string corresponding to the input ids
         """
         assert self._vocab is not None
-        return b"".join([self._vocab[id_] for id_ in ids]).decode("utf-8")
+        return b"".join([self._vocab[id_] for id_ in ids]).decode("utf-8", errors="replace")
