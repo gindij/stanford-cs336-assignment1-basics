@@ -35,13 +35,13 @@ def attention(
         mask = torch.zeros((seq_len, seq_len)).bool()
     if training and (pdrop is not None and pdrop > 0.0):
         mask = dropout(mask, pdrop)
-    a[..., mask.bool()] = -torch.inf
+    mask = mask.to(a.device)
+    # a[..., mask.bool()] = -torch.inf
+    a.masked_fill_(mask.bool(), -torch.inf)
     return torch.matmul(softmax(a, dim=-1), v)
 
 
-def cross_entropy(
-    logits: torch.Tensor, targets: torch.Tensor, reduce: str = "mean"
-) -> torch.Tensor:
+def cross_entropy(logits: torch.Tensor, targets: torch.Tensor, reduce: str = "mean") -> torch.Tensor:
     # logits is [batch_size * seq_len, vocab_size]
     # targets is [batch_size * seq_len]
     Dm, _ = logits.shape

@@ -13,13 +13,17 @@ def get_batch(
     rng: random.Random = random.Random(),
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     n = len(x)
-    data_batch = np.zeros((batch_size, context_length))
-    label_batch = np.zeros((batch_size, context_length))
+    data_batch = np.zeros((batch_size, context_length), dtype=np.int64)
+    label_batch = np.zeros((batch_size, context_length), dtype=np.int64)
     for ix_batch in range(batch_size):
         ix_start = rng.randint(0, n - context_length - 1)
         data_batch[ix_batch, :] = x[ix_start : ix_start + context_length]
         label_batch[ix_batch, :] = x[ix_start + 1 : ix_start + context_length + 1]
+    # return (
+    #     torch.Tensor(data_batch).int().to(device),
+    #     torch.Tensor(label_batch).int().to(device),
+    # )
     return (
-        torch.Tensor(data_batch).int().to(device),
-        torch.Tensor(label_batch).int().to(device),
+        torch.from_numpy(data_batch).to(device),
+        torch.from_numpy(label_batch).to(device),
     )

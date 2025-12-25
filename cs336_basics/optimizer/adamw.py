@@ -36,9 +36,16 @@ class AdamW(Optimizer):
                 state = self.state[p]
 
                 t = state.get("t", 1)
-                m, v = state.get(
-                    "m", torch.zeros(grad.shape).to(self.device)
-                ), state.get("v", torch.zeros(grad.shape).to(self.device))
+                m = state.get("m", None)
+                if m is None:
+                    m = torch.zeros(grad.shape).to(self.device)
+                v = state.get("v", None)
+                if v is None:
+                    v = torch.zeros(grad.shape).to(self.device)
+
+                # m, v = state.get(
+                #     "m", torch.zeros(grad.shape).to(self.device)
+                # ), state.get("v", torch.zeros(grad.shape).to(self.device))
 
                 m = self.beta1 * m + (1 - self.beta1) * grad
                 mhat = m / (1 - self.beta1**t)
