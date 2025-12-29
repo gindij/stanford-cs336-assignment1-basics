@@ -6,17 +6,23 @@ import torch
 
 
 def get_batch(
-    x: np.ndarray,
+    x: np.ndarray,  # Keep as np.ndarray for as long as possible
     batch_size: int,
     context_length: int,
     device: str,
-    rng: random.Random = random.Random(),
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     n = len(x)
-    start = torch.randint(0, n - context_length - 1, (batch_size, 1))
-    offset = torch.arange(context_length)
-    all_indices = start + offset  # broadcasting
-    x_tensor = torch.from_numpy(x).to(device)
-    x_batch = x_tensor[all_indices]  # .to(device)
-    y_batch = x_tensor[all_indices + 1]  # .to(device)
+    # 1. Generate indices on CPU using torch
+    ix = torch.randint(0, n - context_length - 1, (batch_size,))
+
+    # 2. Slice the NumPy array directly.
+    # Slicing a numpy mmap is efficient; it only reads the needed bytes from disk.
+    x_stack = np.stack([x[i : i + context_length] for i in ix])
+    y_stack = np.stack([x[i + 1 : i + context_length + 1] for i in ix])
+
+    # 3. Convert the small batch to torch and move to device
+    # This creates a fresh, writable copy of just the batch, resolving the warning.
+    x_batch = torch.from_numpy(x_stack).to(device)
+    y_batch = torch.from_numpy(y_stack).to(device)
+
     return x_batch, y_batch
