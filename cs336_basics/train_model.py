@@ -69,6 +69,11 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
     train_data = np.load(f"{args.token_dir}/train.npy", mmap_mode="r")
     valid_data = np.load(f"{args.token_dir}/valid.npy", mmap_mode="r")
 
+    eval_batches = [
+        get_batch(valid_data, batch_size=args.batch_size, context_length=args.context_length, device=device)
+        for _ in range(len(args.num_eval_batches))
+    ]
+
     epoch_pbar = tqdm.tqdm(range(iteration, args.epochs), desc="Epochs")
     for epoch in epoch_pbar:
 
@@ -78,13 +83,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
             model.eval()
             with torch.no_grad():
                 total_eval_loss = 0.0
-                for i in tqdm.tqdm(range(args.num_eval_batches), desc="Eval batches", leave=False):
-                    x, y = get_batch(
-                        valid_data,
-                        batch_size=args.batch_size,
-                        context_length=args.context_length,
-                        device=device,
-                    )
+                for x, y in tqdm.tqdm(eval_batches, desc="Eval batches", leave=False):
                     y = y.flatten()
                     yhat = model(x).view(-1, args.vocab_size)
                     loss = cross_entropy(yhat, y)
@@ -177,7 +176,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.profile:
-        with profile(activities=[ProfilerActivity.CPU], record_shapes=True, with_stack=True) as prof:
+        activities = [ProfilerActivity.CPU]
+        if torch.cuda.is_available():
+            activities.append(ProfilerActivity.CUDA)
+        with profile(activities=activities, record_shapes=True, with_stack=True) as prof:
             with record_function("train_model"):
                 train_model(args, use_wandb=False)
         print(prof.key_averages(group_by_stack_n=5).table(sort_by="self_cpu_time_total", row_limit=10))
