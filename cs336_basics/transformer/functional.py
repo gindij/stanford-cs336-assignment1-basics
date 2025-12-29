@@ -36,7 +36,6 @@ def attention(
     if training and (pdrop is not None and pdrop > 0.0):
         mask = dropout(mask, pdrop)
     mask = mask.to(a.device)
-    # a[..., mask.bool()] = -torch.inf
     a.masked_fill_(mask.bool(), -torch.inf)
     return torch.matmul(softmax(a, dim=-1), v)
 

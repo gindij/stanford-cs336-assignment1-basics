@@ -82,7 +82,11 @@ optimizer = AdamW(model.parameters(), lr_init, device=device)
 iteration = 0
 if args.start_from == "latest" and os.path.exists(args.checkpoint_dir):
     ckpt = max(os.listdir(args.checkpoint_dir))
-    iteration = load_checkpoint(ckpt, model, optimizer)
+    iteration = load_checkpoint(
+        os.path.join(args.checkpoint_dir, ckpt),
+        model,
+        optimizer,
+    )
 
 if not os.path.exists(args.checkpoint_dir):
     os.makedirs(args.checkpoint_dir)

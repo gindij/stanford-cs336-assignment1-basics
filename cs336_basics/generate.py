@@ -59,7 +59,7 @@ tok = BPETokenizer.from_files(
     special_tokens=["<|endoftext|>"],
 )
 prompt = "hello darkness my old friend"
-max_tokens_allowed = 1000
+max_tokens_allowed = 256
 model = TransformerLM(
     num_heads=16,
     num_layers=4,
@@ -71,7 +71,7 @@ model = TransformerLM(
     context_length=256,
 )
 optimizer = AdamW(model.parameters(), lr=0.001)
-load_checkpoint(src="checkpoints/00099.pt", model=model, optimizer=optimizer)
+load_checkpoint(src="checkpoints/00200.pt", model=model, optimizer=optimizer)
 
 print(
     decode(
