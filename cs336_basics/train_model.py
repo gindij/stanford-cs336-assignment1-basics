@@ -71,7 +71,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
     eval_batches = [
         get_batch(valid_data, batch_size=args.batch_size, context_length=args.context_length, device=device)
-        for _ in range(len(args.num_eval_batches))
+        for _ in range(args.num_eval_batches)
     ]
 
     epoch_pbar = tqdm.tqdm(range(iteration, args.epochs), desc="Epochs")
