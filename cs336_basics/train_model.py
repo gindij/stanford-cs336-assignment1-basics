@@ -91,7 +91,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 if use_wandb:
                     run.log(
                         {
-                            "mean_epoch_eval_loss": total_eval_loss
+                            "eval_loss_per_token": total_eval_loss
                             / (args.num_eval_batches * args.batch_size * args.context_length)
                         },
                         step=epoch,
@@ -110,7 +110,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
             yhat = model(x).view(-1, args.vocab_size)
             loss_sum = cross_entropy(yhat, y.flatten(), reduce="sum")
-            loss = loss_sum / args.batch_size
+            loss = loss_sum / (args.batch_size * args.context_length)
 
             for param_group in optimizer.param_groups:
                 param_group["lr"] = get_cosine_annealing_lr(
@@ -129,7 +129,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
             batch_pbar.set_postfix(
                 {
-                    "mean_per_token_loss": total_train_loss / (args.batch_size * args.context_length * (i + 1)),
+                    "train_loss_per_token": total_train_loss / (args.batch_size * args.context_length * (i + 1)),
                     "lr": round(optimizer.param_groups[0]["lr"], 5),
                 }
             )
@@ -144,7 +144,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
         mean_loss = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
         # Log metrics to wandb.
-        to_log = {"mean_per_token_loss": mean_loss}
+        to_log = {"train_loss_per_token": mean_loss}
         if use_wandb:
             run.log(to_log, step=epoch)
         epoch_pbar.set_postfix(to_log)
