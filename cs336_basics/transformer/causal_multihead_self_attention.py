@@ -7,7 +7,7 @@ from cs336_basics.transformer.functional import attention
 
 
 def generate_causal_attn_mask(seq_len: int) -> torch.Tensor:
-    return torch.triu(torch.ones((seq_len, seq_len)), diagonal=1).bool()
+    return torch.triu(torch.ones((seq_len, seq_len)), diagonal=1)
 
 
 class CausalMultiheadSelfAttention(torch.nn.Module):
