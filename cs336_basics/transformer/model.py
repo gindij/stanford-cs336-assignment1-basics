@@ -30,14 +30,10 @@ class TransformerLM(torch.nn.Module):
         self.residual_pdrop = residual_pdrop
 
         self.token_embeddings = torch.nn.Parameter(
-            torch.randn(vocab_size, d_model)
-            if weights is None
-            else weights["token_embeddings.weight"]
+            torch.randn(vocab_size, d_model) if weights is None else weights["token_embeddings.weight"]
         )
         self.position_embeddings = torch.nn.Parameter(
-            torch.randn(context_length, d_model)
-            if weights is None
-            else weights["position_embeddings.weight"]
+            torch.randn(context_length, d_model) if weights is None else weights["position_embeddings.weight"]
         )
         self.transformer_blocks = torch.nn.ModuleList(
             [
@@ -49,11 +45,7 @@ class TransformerLM(torch.nn.Module):
                     residual_pdrop=residual_pdrop,
                     ep_norm=ep_norm,
                     weights=(
-                        weights
-                        if weights is None
-                        else {
-                            k.replace(f"layers.{i}.", ""): v for k, v in weights.items()
-                        }
+                        weights if weights is None else {k.replace(f"layers.{i}.", ""): v for k, v in weights.items()}
                     ),
                 )
                 for i in range(num_layers)
@@ -62,20 +54,16 @@ class TransformerLM(torch.nn.Module):
         self.ln_final = RMSNorm(
             d_model=d_model,
             epsilon=ep_norm,
-            weights=(
-                weights if weights is None else {"weight": weights["ln_final.weight"]}
-            ),
+            weights=(weights if weights is None else {"weight": weights["ln_final.weight"]}),
         )
         self.lm_head = torch.nn.Parameter(
-            torch.randn(d_model, vocab_size)
-            if weights is None
-            else weights["lm_head.weight"].T
+            torch.randn(d_model, vocab_size) if weights is None else weights["lm_head.weight"].T
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len = x.shape
         tok_embs = self.token_embeddings[x]
-        x_pos = torch.arange(seq_len).repeat(batch_size, 1)
+        x_pos = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(batch_size, -1)
         pos_embs = self.position_embeddings[x_pos]
         emb_sum = tok_embs + pos_embs
         xx = dropout(emb_sum, self.residual_pdrop, training=self.training)

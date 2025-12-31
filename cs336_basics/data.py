@@ -17,12 +17,13 @@ def get_batch(
 
     # 2. Slice the NumPy array directly.
     # Slicing a numpy mmap is efficient; it only reads the needed bytes from disk.
-    x_stack = np.stack([x[i : i + context_length] for i in ix])
-    y_stack = np.stack([x[i + 1 : i + context_length + 1] for i in ix])
+    data_stack = np.stack([x[i : i + context_length + 1] for i in ix])
+    data_tensor = torch.from_numpy(data_stack).to(device)
+    # y_stack = np.stack([x[i + 1 : i + context_length + 1] for i in ix])
 
     # 3. Convert the small batch to torch and move to device
     # This creates a fresh, writable copy of just the batch, resolving the warning.
-    x_batch = torch.from_numpy(x_stack).to(device)
-    y_batch = torch.from_numpy(y_stack).to(device)
+    x_batch = data_tensor[:, :-1]
+    y_batch = data_tensor[:, 1:]
 
     return x_batch, y_batch

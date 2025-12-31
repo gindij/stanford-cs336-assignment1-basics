@@ -18,7 +18,7 @@ def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:
 def dropout(x: torch.Tensor, p: float, training: bool = True):
     if not training:
         return x
-    return x * torch.bernoulli(torch.ones_like(x) * (1 - p))
+    return x * (torch.rand_like(x) > p)
 
 
 def attention(
@@ -32,10 +32,9 @@ def attention(
     seq_len, dk = k.shape[-2], k.shape[-1]
     a = torch.matmul(q, k.transpose(-1, -2)) / np.sqrt(dk)
     if mask is None:
-        mask = torch.zeros((seq_len, seq_len)).bool()
+        mask = torch.zeros((seq_len, seq_len), device=a.device)
     if training and (pdrop is not None and pdrop > 0.0):
         mask = dropout(mask, pdrop)
-    mask = mask.to(a.device)
     a.masked_fill_(mask.bool(), -torch.inf)
     return torch.matmul(softmax(a, dim=-1), v)
 
@@ -45,7 +44,7 @@ def cross_entropy(logits: torch.Tensor, targets: torch.Tensor, reduce: str = "me
     # targets is [batch_size * seq_len]
     Dm, _ = logits.shape
     logits -= torch.max(logits, dim=1, keepdim=True).values
-    true_logit = logits[torch.arange(Dm), targets]
+    true_logit = logits[torch.arange(Dm, device=logits.device), targets]
     log_sum_exp = torch.logsumexp(logits, dim=1, keepdim=True)
     cross_entropies = -true_logit + log_sum_exp
     if reduce == "mean":

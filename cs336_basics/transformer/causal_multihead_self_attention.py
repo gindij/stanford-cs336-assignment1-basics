@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 
 import torch
+import torch.nn
 
 from cs336_basics.transformer.functional import attention
 
@@ -10,6 +11,8 @@ def generate_causal_attn_mask(seq_len: int) -> torch.Tensor:
 
 
 class CausalMultiheadSelfAttention(torch.nn.Module):
+
+    MAX_SEQ_LEN = 1024
 
     def __init__(
         self,
@@ -30,15 +33,9 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
             # handle the different ways the weights are passed in different tests
             if "q_heads.0.weight" in weights:
                 # Combine weights per head into single matrices
-                q_matrices = [
-                    weights[f"q_heads.{i}.weight"].T for i in range(num_heads)
-                ]
-                k_matrices = [
-                    weights[f"k_heads.{i}.weight"].T for i in range(num_heads)
-                ]
-                v_matrices = [
-                    weights[f"v_heads.{i}.weight"].T for i in range(num_heads)
-                ]
+                q_matrices = [weights[f"q_heads.{i}.weight"].T for i in range(num_heads)]
+                k_matrices = [weights[f"k_heads.{i}.weight"].T for i in range(num_heads)]
+                v_matrices = [weights[f"v_heads.{i}.weight"].T for i in range(num_heads)]
 
                 self.q_proj = torch.nn.Parameter(torch.cat(q_matrices, dim=1))
                 self.k_proj = torch.nn.Parameter(torch.cat(k_matrices, dim=1))
@@ -54,33 +51,18 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
             self.v_proj = torch.nn.Parameter(torch.randn(self.d_model, self.d_model))
 
         self.output_proj = torch.nn.Parameter(
-            weights["output_proj.weight"].T
-            if weights is not None
-            else torch.randn(self.d_model, self.d_model)
+            weights["output_proj.weight"].T if weights is not None else torch.randn(self.d_model, self.d_model)
         )
+
+        self.causal_mask = torch.nn.Buffer(generate_causal_attn_mask(self.MAX_SEQ_LEN))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, _ = x.shape
-        q = (
-            torch.matmul(x, self.q_proj)
-            .view(batch_size, seq_len, self.num_heads, self.dk)
-            .transpose(1, 2)
-        )
-        k = (
-            torch.matmul(x, self.k_proj)
-            .view(batch_size, seq_len, self.num_heads, self.dk)
-            .transpose(1, 2)
-        )
-        v = (
-            torch.matmul(x, self.v_proj)
-            .view(batch_size, seq_len, self.num_heads, self.dv)
-            .transpose(1, 2)
-        )
-        mask = generate_causal_attn_mask(seq_len)
-        attn_output = attention(
-            q, k, v, mask=mask, pdrop=self.attn_pdrop, training=self.training
-        )
-        attn_output = (
-            attn_output.transpose(1, 2).contiguous().view(batch_size, seq_len, -1)
-        )
+        q = torch.matmul(x, self.q_proj).view(batch_size, seq_len, self.num_heads, self.dk).transpose(1, 2)
+        k = torch.matmul(x, self.k_proj).view(batch_size, seq_len, self.num_heads, self.dk).transpose(1, 2)
+        v = torch.matmul(x, self.v_proj).view(batch_size, seq_len, self.num_heads, self.dv).transpose(1, 2)
+        # mask = generate_causal_attn_mask(seq_len).to(x.device)
+        mask = self.causal_mask[:seq_len, :seq_len]
+        attn_output = attention(q, k, v, mask=mask, pdrop=self.attn_pdrop, training=self.training)
+        attn_output = attn_output.transpose(1, 2).reshape(batch_size, seq_len, -1)
         return torch.matmul(attn_output, self.output_proj)
