@@ -45,12 +45,12 @@ def cross_entropy(logits: torch.Tensor, targets: torch.Tensor, reduce: str = "me
     Dm, _ = logits.shape
     logits -= torch.max(logits, dim=1, keepdim=True).values
     true_logit = logits[torch.arange(Dm, device=logits.device), targets]
-    log_sum_exp = torch.logsumexp(logits, dim=1, keepdim=True)
+    log_sum_exp = torch.logsumexp(logits, dim=1)
     cross_entropies = -true_logit + log_sum_exp
     if reduce == "mean":
-        return torch.mean(-true_logit + log_sum_exp)
+        return torch.mean(cross_entropies)
     if reduce == "sum":
-        return torch.sum(-true_logit + log_sum_exp)
+        return torch.sum(cross_entropies)
     if reduce == "none":
         return cross_entropies
     raise ValueError(f"unknown reduction {reduce}")
