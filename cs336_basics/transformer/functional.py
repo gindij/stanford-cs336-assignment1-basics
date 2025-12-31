@@ -49,6 +49,8 @@ def cross_entropy(logits: torch.Tensor, targets: torch.Tensor, reduce: str = "me
     cross_entropies = -true_logit + log_sum_exp
     if reduce == "mean":
         return torch.mean(-true_logit + log_sum_exp)
+    if reduce == "sum":
+        return torch.sum(-true_logit + log_sum_exp)
     if reduce == "none":
         return cross_entropies
     raise ValueError(f"unknown reduction {reduce}")

@@ -86,11 +86,14 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 for x, y in tqdm.tqdm(eval_batches, desc="Eval batches", leave=False):
                     y = y.flatten()
                     yhat = model(x).view(-1, args.vocab_size)
-                    loss = cross_entropy(yhat, y)
+                    loss = cross_entropy(yhat, y, reduce="sum")
                     total_eval_loss += loss.detach()
                 if use_wandb:
                     run.log(
-                        {"mean_epoch_eval_loss": total_eval_loss / args.num_eval_batches},
+                        {
+                            "mean_epoch_eval_loss": total_eval_loss
+                            / (args.num_eval_batches * args.batch_size * args.context_length)
+                        },
                         step=epoch,
                     )
 
@@ -106,7 +109,8 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
             )
 
             yhat = model(x).view(-1, args.vocab_size)
-            loss = cross_entropy(yhat, y.flatten())
+            loss_sum = cross_entropy(yhat, y.flatten(), reduce="sum")
+            loss = loss_sum / args.batch_size
 
             for param_group in optimizer.param_groups:
                 param_group["lr"] = get_cosine_annealing_lr(
@@ -121,12 +125,12 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
             loss.backward()
             optimizer.step()
 
-            total_train_loss += loss.item()
+            total_train_loss += loss_sum.item()
 
             batch_pbar.set_postfix(
                 {
-                    "mean_loss": total_train_loss / (i + 1),
-                    "lr": optimizer.param_groups[0]["lr"],
+                    "mean_per_token_loss": total_train_loss / (args.batch_size * args.context_length * (i + 1)),
+                    "lr": round(optimizer.param_groups[0]["lr"], 5),
                 }
             )
 
@@ -138,9 +142,9 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 os.path.join(args.checkpoint_dir, f"{str(epoch).zfill(5)}.pt"),
             )
 
-        mean_loss = total_train_loss / args.num_train_batches
+        mean_loss = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
         # Log metrics to wandb.
-        to_log = {"mean_epoch_train_loss": mean_loss}
+        to_log = {"mean_per_token_loss": mean_loss}
         if use_wandb:
             run.log(to_log, step=epoch)
         epoch_pbar.set_postfix(to_log)
