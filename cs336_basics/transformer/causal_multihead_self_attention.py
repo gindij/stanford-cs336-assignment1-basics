@@ -54,7 +54,7 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
             weights["output_proj.weight"].T if weights is not None else torch.randn(self.d_model, self.d_model)
         )
 
-        self.causal_mask = torch.nn.Buffer(generate_causal_attn_mask(self.MAX_SEQ_LEN))
+        self.register_buffer("attn_mask", generate_causal_attn_mask(self.MAX_SEQ_LEN))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, _ = x.shape
@@ -62,7 +62,7 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
         k = torch.matmul(x, self.k_proj).view(batch_size, seq_len, self.num_heads, self.dk).transpose(1, 2)
         v = torch.matmul(x, self.v_proj).view(batch_size, seq_len, self.num_heads, self.dv).transpose(1, 2)
         # mask = generate_causal_attn_mask(seq_len).to(x.device)
-        mask = self.causal_mask[:seq_len, :seq_len]
+        mask = self.attn_mask[:seq_len, :seq_len]
         attn_output = attention(q, k, v, mask=mask, pdrop=self.attn_pdrop, training=self.training)
         attn_output = attn_output.transpose(1, 2).reshape(batch_size, seq_len, -1)
         return torch.matmul(attn_output, self.output_proj)
