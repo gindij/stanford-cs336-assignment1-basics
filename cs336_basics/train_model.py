@@ -108,10 +108,6 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
             yhat = model(x).view(-1, args.vocab_size)
             loss = cross_entropy(yhat, y.flatten())
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
             for param_group in optimizer.param_groups:
                 param_group["lr"] = get_cosine_annealing_lr(
                     epoch * args.num_train_batches + i,
@@ -121,9 +117,18 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                     args.lr_cosine_cycle_iters,
                 )
 
-            total_train_loss += loss.detach()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-            # batch_pbar.set_postfix({"mean_loss": total_train_loss / (i + 1)})
+            total_train_loss += loss.item()
+
+            batch_pbar.set_postfix(
+                {
+                    "mean_loss": total_train_loss / (i + 1),
+                    "lr": optimizer.param_groups[0]["lr"],
+                }
+            )
 
         if epoch % args.save_every == 0 or epoch == args.epochs - 1:
             save_checkpoint(
@@ -133,11 +138,12 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 os.path.join(args.checkpoint_dir, f"{str(epoch).zfill(5)}.pt"),
             )
 
-        mean_loss = (total_train_loss / args.num_train_batches).item()
+        mean_loss = total_train_loss / args.num_train_batches
         # Log metrics to wandb.
+        to_log = {"mean_epoch_train_loss": mean_loss}
         if use_wandb:
-            run.log({"mean_epoch_train_loss": mean_loss}, step=epoch)
-        epoch_pbar.set_postfix({"mean_epoch_train_loss": mean_loss})
+            run.log(to_log, step=epoch)
+        epoch_pbar.set_postfix(to_log)
 
     # Finish the run and upload any remaining data.
     if use_wandb:

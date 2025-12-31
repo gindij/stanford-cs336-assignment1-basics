@@ -10,6 +10,7 @@ data/
 tokenizer_outputs/
 checkpoints*/
 tokens/
+OPTIMIZATION_NOTES.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
