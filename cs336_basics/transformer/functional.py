@@ -16,9 +16,7 @@ def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:
 
 
 def dropout(x: torch.Tensor, p: float, training: bool = True):
-    if not training:
-        return x
-    return x * (torch.rand_like(x) > p)
+    return torch.nn.functional.dropout(x, p, training)
 
 
 def attention(
@@ -36,7 +34,10 @@ def attention(
     if training and (pdrop is not None and pdrop > 0.0):
         mask = dropout(mask, pdrop)
     a.masked_fill_(mask.bool(), -torch.inf)
-    return torch.matmul(softmax(a, dim=-1), v)
+    attn_weights = softmax(a, dim=1)
+    if training and (pdrop is not None and pdrop > 0.0):
+        attn_weights = dropout(attn_weights, pdrop)
+    return torch.matmul(attn_weights, v)
 
 
 def cross_entropy(logits: torch.Tensor, targets: torch.Tensor, reduce: str = "mean") -> torch.Tensor:
