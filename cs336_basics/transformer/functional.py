@@ -34,7 +34,7 @@ def attention(
     if training and (pdrop is not None and pdrop > 0.0):
         mask = dropout(mask, pdrop)
     a.masked_fill_(mask.bool(), -torch.inf)
-    attn_weights = softmax(a, dim=1)
+    attn_weights = softmax(a, dim=-1)
     if training and (pdrop is not None and pdrop > 0.0):
         attn_weights = dropout(attn_weights, pdrop)
     return torch.matmul(attn_weights, v)
