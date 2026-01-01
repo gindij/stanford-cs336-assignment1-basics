@@ -78,25 +78,6 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
     for epoch in epoch_pbar:
 
         model.train()
-
-        if epoch % args.eval_every == 0:
-            model.eval()
-            with torch.no_grad():
-                total_eval_loss = 0.0
-                for x, y in tqdm.tqdm(eval_batches, desc="Eval batches", leave=False):
-                    y = y.flatten()
-                    yhat = model(x).view(-1, args.vocab_size)
-                    loss = cross_entropy(yhat, y, reduce="sum")
-                    total_eval_loss += loss.detach()
-                if use_wandb:
-                    run.log(
-                        {
-                            "eval_loss_per_token": total_eval_loss
-                            / (args.num_eval_batches * args.batch_size * args.context_length)
-                        },
-                        step=epoch,
-                    )
-
         total_train_loss = 0.0
         batch_pbar = tqdm.tqdm(range(args.num_train_batches), desc="Train batches", leave=False)
         for i in batch_pbar:
@@ -134,6 +115,31 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 }
             )
 
+        mean_loss = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
+        # Log metrics to wandb.
+        to_log = {"train_loss_per_token": mean_loss}
+        if use_wandb:
+            run.log(to_log, step=epoch)
+        epoch_pbar.set_postfix(to_log)
+
+        if epoch % args.eval_every == 0 or epoch == args.epochs - 1:
+            model.eval()
+            with torch.no_grad():
+                total_eval_loss = 0.0
+                for x, y in tqdm.tqdm(eval_batches, desc="Eval batches", leave=False):
+                    y = y.flatten()
+                    yhat = model(x).view(-1, args.vocab_size)
+                    loss = cross_entropy(yhat, y, reduce="sum")
+                    total_eval_loss += loss.detach()
+                if use_wandb:
+                    run.log(
+                        {
+                            "eval_loss_per_token": total_eval_loss
+                            / (args.num_eval_batches * args.batch_size * args.context_length)
+                        },
+                        step=epoch,
+                    )
+
         if epoch % args.save_every == 0 or epoch == args.epochs - 1:
             save_checkpoint(
                 model,
@@ -141,13 +147,6 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 epoch,
                 os.path.join(args.checkpoint_dir, f"{str(epoch).zfill(5)}.pt"),
             )
-
-        mean_loss = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
-        # Log metrics to wandb.
-        to_log = {"train_loss_per_token": mean_loss}
-        if use_wandb:
-            run.log(to_log, step=epoch)
-        epoch_pbar.set_postfix(to_log)
 
     # Finish the run and upload any remaining data.
     if use_wandb:
