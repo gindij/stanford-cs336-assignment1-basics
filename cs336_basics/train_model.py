@@ -7,7 +7,7 @@ import tqdm
 
 from cs336_basics.transformer.model import TransformerLM
 from cs336_basics.data import get_batch
-from cs336_basics.utils import save_checkpoint, load_checkpoint
+from cs336_basics.utils import clip_gradients, save_checkpoint, load_checkpoint
 from cs336_basics.optimizer.adamw import AdamW
 from cs336_basics.transformer.functional import cross_entropy
 from cs336_basics.optimizer.learning_rate_scheduler import get_cosine_annealing_lr
@@ -46,13 +46,10 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
         num_layers=args.num_layers,
     ).to(device)
 
-    lr_init = get_cosine_annealing_lr(
-        0,
-        args.lr_min,
-        args.lr_max,
-        args.lr_warmup_iters,
-        args.lr_cosine_cycle_iters,
-    )
+    num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Model has {num_params} trainable parameters")
+
+    lr_init = get_cosine_annealing_lr(0, args.lr_min, args.lr_max, args.lr_warmup_iters, args.lr_cosine_cycle_iters)
     optimizer = AdamW(model.parameters(), lr_init, device=device)
     iteration = 0
     if args.start_from == "latest" and os.path.exists(args.checkpoint_dir):
@@ -104,6 +101,8 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
             optimizer.zero_grad()
             loss.backward()
+            if args.clip_grad:
+                clip_gradients(model.parameters(), args.clip_grad_max_l2)
             optimizer.step()
 
             total_train_loss += loss_sum.item()
@@ -168,6 +167,9 @@ if __name__ == "__main__":
     parser.add_argument("--d-ff", type=int, default=1536)
     parser.add_argument("--attn-pdrop", type=float, default=0.3)
     parser.add_argument("--residual-pdrop", type=float, default=0.3)
+
+    parser.add_argument("--clip-grad", action="store_true")
+    parser.add_argument("--clip-grad-max-l2", type=float, default=1.0)
 
     parser.add_argument("--epochs", type=int, default=250)
     parser.add_argument("--batch-size", type=int, default=16)
