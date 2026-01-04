@@ -29,11 +29,12 @@ class TransformerLM(torch.nn.Module):
         self.num_layers = num_layers
         self.residual_pdrop = residual_pdrop
 
+        norm = torch.distributions.Normal(0.0, 0.02)
         self.token_embeddings = torch.nn.Parameter(
-            torch.randn(vocab_size, d_model) if weights is None else weights["token_embeddings.weight"]
+            norm.sample((vocab_size, d_model)) if weights is None else weights["token_embeddings.weight"]
         )
         self.position_embeddings = torch.nn.Parameter(
-            torch.randn(context_length, d_model) if weights is None else weights["position_embeddings.weight"]
+            norm.sample((context_length, d_model)) if weights is None else weights["position_embeddings.weight"]
         )
         self.transformer_blocks = torch.nn.ModuleList(
             [
@@ -56,9 +57,6 @@ class TransformerLM(torch.nn.Module):
             epsilon=ep_norm,
             weights=(weights if weights is None else {"weight": weights["ln_final.weight"]}),
         )
-        self.lm_head = torch.nn.Parameter(
-            torch.randn(d_model, vocab_size) if weights is None else weights["lm_head.weight"].T
-        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len = x.shape
@@ -70,5 +68,6 @@ class TransformerLM(torch.nn.Module):
         for tblock in self.transformer_blocks:
             xx = tblock(xx)
         xx = self.ln_final(xx)
-        logits = torch.matmul(xx, self.lm_head)
+        # we use the token embeddings here to implement weight tying
+        logits = torch.matmul(xx, self.token_embeddings.t())
         return logits

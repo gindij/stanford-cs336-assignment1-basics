@@ -20,13 +20,14 @@ class FeedForwardNetwork(torch.nn.Module):
         self.d_model = d_model
         self.d_ff = d_ff or (4 * d_model)
 
-        self.w1 = torch.nn.Parameter(torch.randn(self.d_ff, self.d_model))
-        self.w2 = torch.nn.Parameter(torch.randn(self.d_model, self.d_ff))
+        norm = torch.distributions.Normal(0.0, 0.02)
+        w1_params = norm.sample((self.d_ff, self.d_model))
+        w2_params = norm.sample((self.d_model, self.d_ff))
+        self.w1 = torch.nn.Parameter(w1_params)
+        self.w2 = torch.nn.Parameter(w2_params)
 
         if len(weights) > 0:
-            self.load_state_dict(
-                {k.replace(".weight", ""): v for k, v in weights.items()}
-            )
+            self.load_state_dict({k.replace(".weight", ""): v for k, v in weights.items()})
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return gelu(x @ self.w1.T) @ self.w2.T

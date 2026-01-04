@@ -29,6 +29,7 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
         self.dv = d_model // num_heads
         self.attn_pdrop = attn_pdrop
 
+        norm = torch.distributions.Normal(0.0, 0.02)
         if weights is not None:
             # handle the different ways the weights are passed in different tests
             if "q_heads.0.weight" in weights:
@@ -46,12 +47,12 @@ class CausalMultiheadSelfAttention(torch.nn.Module):
                 self.v_proj = torch.nn.Parameter(weights["v_proj.weight"].T)
         else:
             # Initialize as single matrices
-            self.q_proj = torch.nn.Parameter(torch.randn(self.d_model, self.d_model))
-            self.k_proj = torch.nn.Parameter(torch.randn(self.d_model, self.d_model))
-            self.v_proj = torch.nn.Parameter(torch.randn(self.d_model, self.d_model))
+            self.q_proj = torch.nn.Parameter(norm.sample((self.d_model, self.d_model)))
+            self.k_proj = torch.nn.Parameter(norm.sample((self.d_model, self.d_model)))
+            self.v_proj = torch.nn.Parameter(norm.sample((self.d_model, self.d_model)))
 
         self.output_proj = torch.nn.Parameter(
-            weights["output_proj.weight"].T if weights is not None else torch.randn(self.d_model, self.d_model)
+            weights["output_proj.weight"].T if weights is not None else norm.sample((self.d_model, self.d_model))
         )
 
         self.register_buffer("attn_mask", generate_causal_attn_mask(self.MAX_SEQ_LEN))
