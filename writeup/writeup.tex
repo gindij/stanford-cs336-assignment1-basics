@@ -40,5 +40,47 @@ Question 1:
 \section*{SGD Learning Rate Tuning Experiment}
 The larger the learning rate, the faster the loss decays. This is because the loss is the average square model weight, which the model can optimize easily by just pushing all parameter values to zero. The larger the learning rate, the faster the weights will decay (in the absence of forces causing them not to).
 
+\section*{Learning rate experiments}
+I tried the learning rates that you can find in learning\_rate\_runs.sh. A learning curve for one of them with validation loss (16.8m tokens) is shown below
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/lr.png}
+    \caption{Learning rate experiment runs.}
+    \label{fig:learning_rate}
+\end{figure}
+
+In order to tune the learning rates, I fixed the minimum learning rate at $10^{-4}$ and varied the maximum learning rate from $5\times 10^{-3}$ to $10^{-4}$.
+
+Looking at Figure~\ref{fig:learning_rate}, we observe that higher learning rates (0.005 and 0.001) lead to faster initial convergence, with the loss dropping more rapidly in the first 20 steps. The lowest learning rate (0.0001) converges much more slowly and hasn't fully converged even by step 100. However, all learning rates eventually reach similar final loss values around 0.6-0.7. The evaluation loss curves show similar patterns, though with slightly more variance early in training for higher learning rates. This confirms the folk wisdom that higher learning rates accelerate training when they don't cause divergence, but the final converged loss is relatively independent of the learning rate choice within a reasonable range.
+
+\section*{Batch size experiments}
+For the batch size experiments, I started with size 32 (since batch size of 1 was very slow). In addition, I tried 64, 256, and 512.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/bs.png}
+    \caption{Batch size experiment runs.}
+    \label{fig:batch_size}
+\end{figure}
+
+As shown in Figure~\ref{fig:batch_size}, smaller batch sizes (32 and 64) converge faster in terms of gradient steps, reaching low loss values within the first 20 steps. Larger batch sizes (256 and 512) require more steps to reach the same loss levels, with batch size 512 showing the slowest per-step convergence. This is expected: smaller batch sizes provide noisier but more frequent gradient updates, leading to faster convergence per step. However, larger batch sizes are more computationally efficient per sample due to better GPU utilization, so the wall-clock time comparison may favor larger batches despite the slower per-step convergence. All batch sizes eventually converge to similar final loss values, suggesting that batch size primarily affects the optimization trajectory rather than the final solution quality.
+
+\section*{Generation experiments}
+I experimented with varying temperature ($\tau$) and top-p (nucleus sampling threshold $p$) parameters during text generation. The prompt used was ``Once upon a time, there was a little boy named'' and I generated approximately 50 tokens for each configuration.
+
+\textbf{Key observations:}
+
+\begin{enumerate}
+    \item \textbf{Low top-p ($p=0.2$) causes repetition:} With $p=0.2$, the model only samples from the very highest probability tokens, leading to highly repetitive output regardless of temperature. For example, at temp=1, $p=0.2$, the model produced ``It is a ball'' repeated many times.
+
+    \item \textbf{High temperature causes incoherence:} At temp=2 and especially temp=5, the probability distribution becomes too flat, causing the model to sample unlikely tokens that don't form coherent text. At temp=5, the output degenerates into random word salad (e.g., ``mechanic repe harborpl crawling hats festival'').
+
+    \item \textbf{Moderate settings produce best results:} The combination of temp=1 with $p=0.5$ or $p=0.8$ produced the most coherent and natural-sounding text. With temp=1, $p=0.5$, the model generated a complete, grammatical story about a boy and a car.
+
+    \item \textbf{Trade-off between diversity and coherence:} Lower temperature and lower top-p produce more predictable but potentially repetitive text, while higher values increase diversity at the cost of coherence. The sweet spot appears to be around temp=1 with $p \in [0.5, 0.8]$.
+\end{enumerate}
+
+These results demonstrate the importance of careful hyperparameter tuning during inference. Even a well-trained model can produce poor outputs with suboptimal decoding parameters.
 
 \end{document}

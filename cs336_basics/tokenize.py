@@ -10,6 +10,7 @@ def tokenize(arguments: argparse.Namespace):
     tokenizer = BPETokenizer.from_files(
         vocab_path=f"{arguments.tokenizer_dir}/vocab.json",
         merges_path=f"{arguments.tokenizer_dir}/merges.txt",
+        special_tokens=["<|endoftext|>"],
     )
 
     if not os.path.exists(arguments.token_output_dir):

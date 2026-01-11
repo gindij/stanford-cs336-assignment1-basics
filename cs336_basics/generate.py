@@ -58,14 +58,14 @@ def decode(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate text from a model checkpoint.")
-    parser.add_argument("--checkpoint_path", type=str, required=True, help="Path to the checkpoint file.")
+    parser.add_argument("--checkpoint-path", type=str, required=True, help="Path to the checkpoint file.")
     parser.add_argument("--prompt", type=str, required=True, help="Prompt to start generation.")
-    parser.add_argument("--max_tokens_allowed", type=int, default=256, help="Maximum number of tokens to generate.")
+    parser.add_argument("--max-tokens-allowed", type=int, default=256, help="Maximum number of tokens to generate.")
     parser.add_argument("--temp", type=float, default=2.0, help="Temperature for sampling.")
     parser.add_argument("--p", type=float, default=None, help="Top-p sampling probability.")
     parser.add_argument("--device", type=str, default="cpu", help="Device to run on (cpu, cuda, mps).")
     parser.add_argument(
-        "--tokenizer_dir", type=str, default="ts_tokenizer_new", help="Directory containing tokenizer files."
+        "--tokenizer-dir", type=str, default="ts_tokenizer_new", help="Directory containing tokenizer files."
     )
 
     args = parser.parse_args()
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         context_length=config["context_length"],
     )
     optimizer = AdamW(model.parameters(), lr=0.001)
-    load_checkpoint(src=args.checkpoint_path, model=model, optimizer=optimizer)
+    load_checkpoint(src=args.checkpoint_path, model=model, optimizer=optimizer, map_location=torch.device(args.device))
 
     print(
         decode(
