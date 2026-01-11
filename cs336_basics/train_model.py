@@ -4,6 +4,7 @@ import wandb
 import argparse
 import os
 import tqdm
+import json
 
 from cs336_basics.transformer.model import TransformerLM
 from cs336_basics.data import get_batch
@@ -63,6 +64,9 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
     if not os.path.exists(args.checkpoint_dir):
         os.makedirs(args.checkpoint_dir)
 
+    with open(os.path.join(args.checkpoint_dir, "config.json"), "w") as f:
+        json.dump(vars(args), f)
+
     train_data = np.load(f"{args.token_dir}/train.npy", mmap_mode="r")
     valid_data = np.load(f"{args.token_dir}/valid.npy", mmap_mode="r")
 
@@ -120,7 +124,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
         train_loss_per_token = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
         # Log metrics to wandb.
-        to_log = {"train_loss_per_token": train_loss_per_token, "eval_loss_per_token": eval_loss_per_token}
+        to_log = {"train_loss_per_token": train_loss_per_token}
 
         if epoch % args.eval_every == 0 or epoch == args.epochs - 1:
             model.eval()
@@ -134,7 +138,8 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 eval_loss_per_token = total_eval_loss / (args.num_eval_batches * args.batch_size * args.context_length)
                 to_log["eval_loss_per_token"] = eval_loss_per_token.item()
 
-        epoch_pbar.set_postfix(to_log)
+        # log eval loss per token every iteration
+        epoch_pbar.set_postfix({**to_log, **{"eval_loss_per_token": eval_loss_per_token}})
         if use_wandb:
             run.log(to_log, step=epoch)
 

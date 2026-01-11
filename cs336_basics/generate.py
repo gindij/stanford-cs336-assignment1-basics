@@ -1,5 +1,8 @@
 from typing import Optional
+import argparse
+import os
 import torch
+import json
 
 from cs336_basics.bpe import BPETokenizer
 from cs336_basics.optimizer.adamw import AdamW
@@ -53,33 +56,51 @@ def decode(
         return tokenizer.decode(context_tokens[0].tolist())
 
 
-tok = BPETokenizer.from_files(
-    vocab_path="ts_tokenizer_new/vocab.json",
-    merges_path="ts_tokenizer_new/merges.txt",
-    special_tokens=["<|endoftext|>"],
-)
-prompt = "hello darkness my old friend"
-max_tokens_allowed = 256
-model = TransformerLM(
-    num_heads=16,
-    num_layers=4,
-    d_model=512,
-    d_ff=2048,
-    attn_pdrop=0.2,
-    residual_pdrop=0.2,
-    vocab_size=10000,
-    context_length=256,
-)
-optimizer = AdamW(model.parameters(), lr=0.001)
-load_checkpoint(src="checkpoints/00200.pt", model=model, optimizer=optimizer)
-
-print(
-    decode(
-        prompt=prompt,
-        tokenizer=tok,
-        max_tokens_allowed=max_tokens_allowed,
-        model=model,
-        device="mps",
-        p=0.1,
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate text from a model checkpoint.")
+    parser.add_argument("--checkpoint_path", type=str, required=True, help="Path to the checkpoint file.")
+    parser.add_argument("--prompt", type=str, required=True, help="Prompt to start generation.")
+    parser.add_argument("--max_tokens_allowed", type=int, default=256, help="Maximum number of tokens to generate.")
+    parser.add_argument("--temp", type=float, default=2.0, help="Temperature for sampling.")
+    parser.add_argument("--p", type=float, default=None, help="Top-p sampling probability.")
+    parser.add_argument("--device", type=str, default="cpu", help="Device to run on (cpu, cuda, mps).")
+    parser.add_argument(
+        "--tokenizer_dir", type=str, default="ts_tokenizer_new", help="Directory containing tokenizer files."
     )
-)
+
+    args = parser.parse_args()
+
+    checkpoint_dir = os.path.dirname(args.checkpoint_path)
+    config_path = os.path.join(checkpoint_dir, "config.json")
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    tok = BPETokenizer.from_files(
+        vocab_path=os.path.join(args.tokenizer_dir, "vocab.json"),
+        merges_path=os.path.join(args.tokenizer_dir, "merges.txt"),
+        special_tokens=["<|endoftext|>"],
+    )
+    model = TransformerLM(
+        num_heads=config["num_heads"],
+        num_layers=config["num_layers"],
+        d_model=config["d_model"],
+        d_ff=config["d_ff"],
+        attn_pdrop=config["attn_pdrop"],
+        residual_pdrop=config["residual_pdrop"],
+        vocab_size=config["vocab_size"],
+        context_length=config["context_length"],
+    )
+    optimizer = AdamW(model.parameters(), lr=0.001)
+    load_checkpoint(src=args.checkpoint_path, model=model, optimizer=optimizer)
+
+    print(
+        decode(
+            prompt=args.prompt,
+            tokenizer=tok,
+            max_tokens_allowed=args.max_tokens_allowed,
+            model=model,
+            device=args.device,
+            temp=args.temp,
+            p=args.p,
+        )
+    )
