@@ -66,6 +66,9 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
     train_data = np.load(f"{args.token_dir}/train.npy", mmap_mode="r")
     valid_data = np.load(f"{args.token_dir}/valid.npy", mmap_mode="r")
 
+    print("Training examples:", len(train_data))
+    print("Eval examples:", len(valid_data))
+
     eval_batches = [
         get_batch(valid_data, batch_size=args.batch_size, context_length=args.context_length, device=device)
         for _ in range(args.num_eval_batches)
@@ -76,6 +79,7 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
 
         model.train()
         total_train_loss = 0.0
+        eval_loss_per_token = np.inf
         batch_pbar = tqdm.tqdm(range(args.num_train_batches), desc="Train batches", leave=False)
         for i in batch_pbar:
 
@@ -114,12 +118,9 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                 }
             )
 
-        mean_loss = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
+        train_loss_per_token = total_train_loss / (args.num_train_batches * args.batch_size * args.context_length)
         # Log metrics to wandb.
-        to_log = {"train_loss_per_token": mean_loss}
-        if use_wandb:
-            run.log(to_log, step=epoch)
-        epoch_pbar.set_postfix(to_log)
+        to_log = {"train_loss_per_token": train_loss_per_token, "eval_loss_per_token": eval_loss_per_token}
 
         if epoch % args.eval_every == 0 or epoch == args.epochs - 1:
             model.eval()
@@ -130,14 +131,12 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
                     yhat = model(x).view(-1, args.vocab_size)
                     loss = cross_entropy(yhat, y, reduce="sum")
                     total_eval_loss += loss.detach()
-                if use_wandb:
-                    run.log(
-                        {
-                            "eval_loss_per_token": total_eval_loss
-                            / (args.num_eval_batches * args.batch_size * args.context_length)
-                        },
-                        step=epoch,
-                    )
+                eval_loss_per_token = total_eval_loss / (args.num_eval_batches * args.batch_size * args.context_length)
+                to_log["eval_loss_per_token"] = eval_loss_per_token.item()
+
+        epoch_pbar.set_postfix(to_log)
+        if use_wandb:
+            run.log(to_log, step=epoch)
 
         if epoch % args.save_every == 0 or epoch == args.epochs - 1:
             save_checkpoint(
@@ -184,6 +183,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--dataset", type=str, default="ts")
     parser.add_argument("--profile", action="store_true")
+    parser.add_argument("--use-wandb", action="store_true")
     args = parser.parse_args()
 
     if args.profile:
@@ -195,4 +195,4 @@ if __name__ == "__main__":
                 train_model(args, use_wandb=False)
         print(prof.key_averages(group_by_stack_n=5).table(sort_by="self_cpu_time_total", row_limit=10))
     else:
-        train_model(args, use_wandb=True)
+        train_model(args, use_wandb=args.use_wandb)

@@ -31,8 +31,6 @@ def attention(
     a = torch.matmul(q, k.transpose(-1, -2)) / np.sqrt(dk)
     if mask is None:
         mask = torch.zeros((seq_len, seq_len), device=a.device)
-    if training and (pdrop is not None and pdrop > 0.0):
-        mask = dropout(mask, pdrop)
     a.masked_fill_(mask.bool(), -torch.inf)
     attn_weights = softmax(a, dim=-1)
     if training and (pdrop is not None and pdrop > 0.0):

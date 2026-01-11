@@ -32,7 +32,7 @@ def tokenize(arguments: argparse.Namespace):
                 print(f"chunk size: {len(chunk)}")
                 if len(chunk) >= arguments.chunk_size:
                     print(f"writing chunk {chunk_idx}")
-                    token_array = np.array(tokens[: arguments.chunk_size])
+                    token_array = np.array(chunk[: arguments.chunk_size])
                     np.save(
                         file=os.path.join(
                             arguments.token_output_dir,
@@ -41,7 +41,7 @@ def tokenize(arguments: argparse.Namespace):
                         arr=token_array,
                     )
                     tokens_read += len(token_array)
-                    chunk = tokens[arguments.chunk_size :]
+                    chunk = chunk[arguments.chunk_size :]
                     chunk_idx += 1
                     if chunk_idx == getattr(arguments, f"num_{set_name}_chunks"):
                         break
