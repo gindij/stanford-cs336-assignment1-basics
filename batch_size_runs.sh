@@ -1,0 +1,9 @@
+python -m cs336_basics.train_model --vocab-size 10000 --context-length 256 --d-model 512 --d-ff 2048 --num-layers 4 --num-heads 16 --epochs 100 --num-train-batches 12800 --num-eval-batches 64000 --batch-size 1 --lr-warmup-iters 1000 --lr-cosine-cycle-iters 18000 --lr-min 0.0001 --lr-max 0.005 --clip-grad --clip-grad-max-l2 1.0 --use-wandb --checkpoint-dir b5
+
+python -m cs336_basics.train_model --vocab-size 10000 --context-length 256 --d-model 512 --d-ff 2048 --num-layers 4 --num-heads 16 --epochs 100 --num-train-batches 400 --num-eval-batches 2000 --batch-size 32 --lr-warmup-iters 1000 --lr-cosine-cycle-iters 18000 --lr-min 0.0001 --lr-max 0.005 --clip-grad --clip-grad-max-l2 1.0 --use-wandb --checkpoint-dir b4
+
+python -m cs336_basics.train_model --vocab-size 10000 --context-length 256 --d-model 512 --d-ff 2048 --num-layers 4 --num-heads 16 --epochs 100 --num-train-batches 200 --num-eval-batches 1000 --batch-size 64 --lr-warmup-iters 1000 --lr-cosine-cycle-iters 18000 --lr-min 0.0001 --lr-max 0.005 --clip-grad --clip-grad-max-l2 1.0 --use-wandb --checkpoint-dir b3
+
+python -m cs336_basics.train_model --vocab-size 10000 --context-length 256 --d-model 512 --d-ff 2048 --num-layers 4 --num-heads 16 --epochs 100 --num-train-batches 50 --num-eval-batches 250 --batch-size 256 --lr-warmup-iters 1000 --lr-cosine-cycle-iters 18000 --lr-min 0.0001 --lr-max 0.005 --clip-grad --clip-grad-max-l2 1.0 --use-wandb --checkpoint-dir b2
+
+python -m cs336_basics.train_model --vocab-size 10000 --context-length 256 --d-model 512 --d-ff 2048 --num-layers 4 --num-heads 16 --epochs 100 --num-train-batches 25 --num-eval-batches 125 --batch-size 512 --lr-warmup-iters 1000 --lr-cosine-cycle-iters 18000 --lr-min 0.0001 --lr-max 0.005 --clip-grad --clip-grad-max-l2 1.0 --use-wandb --checkpoint-dir b1
