@@ -75,11 +75,11 @@ def train_model(args: argparse.Namespace, use_wandb: bool):
     ]
 
     epoch_pbar = tqdm.tqdm(range(iteration, args.epochs), desc="Epochs")
+    eval_loss_per_token = np.inf
     for epoch in epoch_pbar:
 
         model.train()
         total_train_loss = 0.0
-        eval_loss_per_token = np.inf
         batch_pbar = tqdm.tqdm(range(args.num_train_batches), desc="Train batches", leave=False)
         for i in batch_pbar:
 
